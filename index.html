@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>WebGIS - Painel Interativo</title>
+    <!-- Adicionando o Leaflet (Biblioteca de Mapas) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        #map { height: 100%; width: 100%; z-index: 1; }
+        
+        /* Menu Lateral (Painel de Controle) */
+        #sidebar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 320px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            z-index: 1000;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        h2 { margin-top: 0; font-size: 18px; color: #333; border-bottom: 2px solid #0078A8; padding-bottom: 10px; }
+        
+        /* Barra de Pesquisa de Fazenda */
+        .search-container { display: flex; gap: 5px; margin-bottom: 20px; }
+        #search-box { flex-grow: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        #search-btn { padding: 8px 12px; background: #0078A8; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        
+        /* Controle de Camadas */
+        .layer-group { margin-bottom: 15px; }
+        .layer-group strong { display: block; font-size: 13px; color: #555; margin-bottom: 8px; }
+        .layer-item { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 5px; }
+        .legend-color { width: 14px; height: 14px; border: 1px solid #999; border-radius: 3px; }
+    </style>
+</head>
+<body>
+
+    <!-- Menu Lateral com Botões Ligar/Desligar -->
+    <div id="sidebar">
+        <h2>Painel do Projeto</h2>
+        
+        <div class="search-container">
+            <input type="text" id="search-box" placeholder="Código da fazenda (ex: FZ-123)">
+            <button id="search-btn">Buscar</button>
+        </div>
+
+        <div class="layer-group">
+            <strong>LIMITES DO PROJETO</strong>
+            <label class="layer-item"><input type="checkbox" checked> <div class="legend-color" style="background: rgba(255,0,0,0.2); border-color: red;"></div> Área de Influência Direta</label>
+            <label class="layer-item"><input type="checkbox" checked> <div class="legend-color" style="background: rgba(0,0,255,0.4); border-color: blue;"></div> Área Diretamente Afetada</label>
+        </div>
+
+        <div class="layer-group">
+            <strong>CAMADAS AMBIENTAIS</strong>
+            <label class="layer-item"><input type="checkbox"> <div class="legend-color" style="background: #8B4513;"></div> Pedologia (EMBRAPA)</label>
+            <label class="layer-item"><input type="checkbox"> <div class="legend-color" style="background: #228B22;"></div> Unidades de Conservação</label>
+            <label class="layer-item"><input type="checkbox"> <div class="legend-color" style="background: #FF8C00;"></div> Terras Indígenas (FUNAI)</label>
+        </div>
+    </div>
+
+    <!-- Onde o mapa será renderizado -->
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Inicializa o mapa com o controle de zoom na direita para não sobrepor o menu
+        var map = L.map('map', { zoomControl: false }).setView([-20.442, -54.646], 6);
+        L.control.zoom({ position: 'topright' }).addTo(map);
+
+        // Mapa Base (Google Maps / OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+        // Simulando a Área Diretamente Afetada
+        var fazenda = L.polygon([
+            [-20.0, -54.5], [-20.0, -54.2], [-20.3, -54.2], [-20.3, -54.5]
+        ], { color: 'blue', fillColor: 'blue', fillOpacity: 0.4 }).addTo(map);
+        fazenda.bindPopup("<b>Fazenda Exemplo</b><br>Código: FZ-123");
+
+        // Simulação do sistema de pesquisa da fazenda
+        document.getElementById('search-btn').addEventListener('click', function() {
+            var val = document.getElementById('search-box').value;
+            if(val === 'FZ-123') {
+                map.flyToBounds(fazenda.getBounds(), { padding: [50, 50], duration: 1.5 });
+                fazenda.openPopup();
+            } else {
+                alert("Para testes, tente buscar por FZ-123");
+            }
+        });
+    </script>
+</body>
+</html>
