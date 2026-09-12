@@ -42,7 +42,7 @@
         <h2>Painel do Projeto</h2>
         
         <div class="search-container">
-            <input type="text" id="search-box" placeholder="Código da fazenda (ex: FZ-123)">
+            <input type="text" id="search-box" placeholder="Código Fazenda (ex: 1003)">
             <button id="search-btn">Buscar</button>
         </div>
 
@@ -76,7 +76,7 @@
         var fazenda = L.polygon([
             [-20.0, -54.5], [-20.0, -54.2], [-20.3, -54.2], [-20.3, -54.5]
         ], { color: 'blue', fillColor: 'blue', fillOpacity: 0.4 }).addTo(map);
-        fazenda.bindPopup("<b>Fazenda Exemplo</b><br>Código: FZ-123");
+        fazenda.bindPopup("<b>Fazenda Exemplo</b><br>Código: 1003");
 
         // Simulação do sistema de pesquisa da fazenda
         document.getElementById('search-btn').addEventListener('click', function() {
@@ -85,7 +85,7 @@
                 map.flyToBounds(fazenda.getBounds(), { padding: [50, 50], duration: 1.5 });
                 fazenda.openPopup();
             } else {
-                alert("Para testes, tente buscar por FZ-123");
+                alert("Para testes, tente buscar por 1003");
             }
         });
     </script>
