@@ -17,6 +17,8 @@
             --bg-card: rgba(30, 41, 35, 0.9);
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
+            --elegivel: #10b981;
+            --inelegivel: #ef4444;
         }
 
         body, html {
@@ -34,7 +36,7 @@
             z-index: 1;
         }
 
-        /* Esconder o controle de zoom padrão para movê-lo */
+        /* Controles de Zoom */
         .leaflet-control-zoom {
             border: none !important;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
@@ -46,20 +48,20 @@
         }
 
         /* ----------------------------------------- */
-        /* MENU LATERAL (SIDEBAR) ESTILO GLASSMORPHISM */
+        /* MENU LATERAL (SIDEBAR) GLASSMORPHISM      */
         /* ----------------------------------------- */
         #sidebar {
             position: absolute;
             top: 20px;
             left: 20px;
-            width: 320px;
+            width: 330px;
             max-height: calc(100vh - 40px);
             background: var(--bg-dark);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(74, 222, 128, 0.2);
             border-radius: 16px;
-            z-index: 1000; /* Acima do mapa */
+            z-index: 1000;
             display: flex;
             flex-direction: column;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -67,7 +69,6 @@
             overflow-y: auto;
         }
 
-        /* Custom Scrollbar para o menu */
         #sidebar::-webkit-scrollbar { width: 6px; }
         #sidebar::-webkit-scrollbar-track { background: transparent; }
         #sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
@@ -127,7 +128,7 @@
         }
         .radio-label input { accent-color: var(--primary); }
 
-        /* Toggles Customizados para Camadas */
+        /* Toggles e Camadas */
         .layer-item {
             display: flex;
             align-items: center;
@@ -143,13 +144,18 @@
         }
 
         .legend-box {
-            width: 16px;
-            height: 16px;
-            border-radius: 4px;
-            border: 1px solid rgba(255,255,255,0.3);
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            display: inline-block;
         }
 
-        /* Botão Switch Estilo iOS/Profissional */
+        .legend-boxes-group {
+            display: flex;
+            gap: 4px;
+        }
+
+        /* Botão Switch estilo iOS */
         .switch {
             position: relative;
             display: inline-block;
@@ -177,25 +183,51 @@
         input:checked + .slider { background-color: var(--primary); }
         input:checked + .slider:before { transform: translateX(18px); }
 
+        /* Sublegenda explicativa para elegibilidade */
+        .sub-legend {
+            margin-top: -8px;
+            margin-bottom: 15px;
+            padding-left: 24px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            gap: 15px;
+        }
+
+        .sub-legend span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
         /* Bloco de Insights */
+        .insight-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
         .insight-card {
-            background: rgba(0,0,0,0.2);
+            background: rgba(0,0,0,0.25);
             border-radius: 8px;
             padding: 12px;
-            margin-bottom: 10px;
             border-left: 3px solid var(--primary);
         }
+
         .insight-value {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 700;
             color: #fff;
         }
+
         .insight-label {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: var(--text-muted);
+            margin-top: 2px;
         }
         
-        /* Popups do Leaflet em Dark Mode */
+        /* Popups Dark Mode */
         .leaflet-popup-content-wrapper {
             background: var(--bg-card);
             color: var(--text-main);
@@ -209,14 +241,12 @@
 </head>
 <body>
 
-    <!-- CONTAINER DO MAPA -->
     <div id="map"></div>
 
-    <!-- SIDEBAR CUSTOMIZADA -->
     <div id="sidebar">
         <div class="sidebar-header">
             <h1>🌐 GEOPORTAL</h1>
-            <p>Análise Espacial • Monitoramento</p>
+            <p>Análise Espacial • Elegibilidade</p>
         </div>
 
         <div class="section">
@@ -240,23 +270,14 @@
         <div class="section">
             <div class="section-title">Camadas Operacionais</div>
             
-            <!-- Controle Influência -->
+            <!-- Controle Fazendas (Com Elegibilidade) -->
             <div class="layer-item">
                 <div class="layer-info">
-                    <div class="legend-box" style="background: rgba(59, 130, 246, 0.2); border-color: #3b82f6;"></div>
-                    <span>Área de Influência</span>
-                </div>
-                <label class="switch">
-                    <input type="checkbox" id="toggle-influencia" checked>
-                    <span class="slider"></span>
-                </label>
-            </div>
-
-            <!-- Controle Fazendas -->
-            <div class="layer-item">
-                <div class="layer-info">
-                    <div class="legend-box" style="background: rgba(245, 158, 11, 0.5); border-color: #f59e0b;"></div>
-                    <span>Imóveis Rurais (Fazendas)</span>
+                    <div class="legend-boxes-group">
+                        <div class="legend-box" style="border: 2px solid var(--elegivel); background: transparent;"></div>
+                        <div class="legend-box" style="border: 2px solid var(--inelegivel); background: transparent;"></div>
+                    </div>
+                    <span>Fazendas (Elegibilidade)</span>
                 </div>
                 <label class="switch">
                     <input type="checkbox" id="toggle-fazendas" checked>
@@ -264,10 +285,16 @@
                 </label>
             </div>
 
+            <!-- Legenda auxiliar de cores -->
+            <div class="sub-legend">
+                <span><div class="legend-box" style="border: 2px solid var(--elegivel); background: transparent; width:10px; height:10px;"></div> Elegível</span>
+                <span><div class="legend-box" style="border: 2px solid var(--inelegivel); background: transparent; width:10px; height:10px;"></div> Inelegível</span>
+            </div>
+
             <!-- Controle Conservação -->
             <div class="layer-item">
                 <div class="layer-info">
-                    <div class="legend-box" style="background: rgba(16, 185, 129, 0.5); border-color: #10b981;"></div>
+                    <div class="legend-box" style="background: rgba(16, 185, 129, 0.5); border: 1px solid #10b981;"></div>
                     <span>Áreas de Conservação</span>
                 </div>
                 <label class="switch">
@@ -275,57 +302,65 @@
                     <span class="slider"></span>
                 </label>
             </div>
+
+            <!-- Controle Influência -->
+            <div class="layer-item">
+                <div class="layer-info">
+                    <div class="legend-box" style="background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6;"></div>
+                    <span>Área de Influência</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="toggle-influencia" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
         </div>
 
         <div class="section" style="border-bottom: none;">
-            <div class="section-title">Insights da Área</div>
+            <div class="section-title">Insights de Elegibilidade</div>
             
-            <div class="insight-card">
-                <div class="insight-value" id="count-fazendas">--</div>
-                <div class="insight-label">Imóveis Rurais Mapeados</div>
+            <div class="insight-grid">
+                <div class="insight-card" style="border-left-color: var(--elegivel);">
+                    <div class="insight-value" id="count-elegivel" style="color: var(--elegivel);">--</div>
+                    <div class="insight-label">Fazendas Elegíveis</div>
+                </div>
+                
+                <div class="insight-card" style="border-left-color: var(--inelegivel);">
+                    <div class="insight-value" id="count-inelegivel" style="color: var(--inelegivel);">--</div>
+                    <div class="insight-label">Fazendas Inelegíveis</div>
+                </div>
             </div>
-            
-            <div class="insight-card">
+
+            <div class="insight-card" style="border-left-color: var(--primary);">
                 <div class="insight-value" id="count-conservacao">--</div>
                 <div class="insight-label">Polígonos de Conservação</div>
             </div>
         </div>
     </div>
 
-    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        // 1. INICIALIZAÇÃO DO MAPA (Zoom posicionado no canto inferior direito igual à referência)
+        // 1. INICIALIZAÇÃO DO MAPA
         var map = L.map('map', { zoomControl: false }).setView([-10.0, -55.0], 5);
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        // 2. CONFIGURAÇÃO DOS MAPAS DE FUNDO
+        // 2. MAPAS DE FUNDO
         var basemaps = {
-            esri: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                attribution: 'Tiles &copy; Esri'
-            }),
-            dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OpenStreetMap &copy; CARTO'
-            }),
-            osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap'
-            })
+            esri: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri' }),
+            dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; CARTO' }),
+            osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' })
         };
-        // Inicia com Esri Satellite
         basemaps.esri.addTo(map);
 
-        // Lógica para alternar mapas de fundo via botões Radio do Menu
         document.querySelectorAll('input[name="basemap"]').forEach(radio => {
             radio.addEventListener('change', function() {
-                // Remove todos
                 Object.values(basemaps).forEach(layer => map.removeLayer(layer));
-                // Adiciona o selecionado
                 basemaps[this.value].addTo(map);
             });
         });
 
-        // 3. FUNÇÃO POPUP DINÂMICO
+        // 3. POPUP DINÂMICO
         function createPopup(feature, layer) {
             if (feature.properties) {
                 let popupContent = '<table class="popup-table">';
@@ -337,56 +372,94 @@
             }
         }
 
-        // 4. ESTILOS DAS CAMADAS
+        // 4. ESTILIZAÇÃO CONDICIONAL DA CAMADA DE FAZENDAS
+        function styleFazendas(feature) {
+            // Obtém o valor da coluna ELEGIBILIDADE limpando espaços extras e ignorando maiúsculas/minúsculas
+            var status = feature.properties && feature.properties.ELEGIBILIDADE 
+                ? String(feature.properties.ELEGIBILIDADE).trim().toUpperCase() 
+                : '';
+
+            if (status === 'INELEGÍVEL' || status === 'INELEGIVEL') {
+                return {
+                    color: '#ef4444',      // Borda Vermelha
+                    weight: 2.5,           // Espessura
+                    opacity: 1,
+                    fillOpacity: 0        // Sem preenchimento
+                };
+            } else if (status === 'ELEGÍVEL' || status === 'ELEGIVEL') {
+                return {
+                    color: '#10b981',      // Borda Verde
+                    weight: 2.5,           // Espessura
+                    opacity: 1,
+                    fillOpacity: 0        // Sem preenchimento
+                };
+            }
+
+            // Estilo neutro de segurança (caso exista alguma linha em branco)
+            return {
+                color: '#94a3b8',
+                weight: 1.5,
+                opacity: 0.8,
+                fillOpacity: 0
+            };
+        }
+
         var styleInfluencia = { color: "#3b82f6", weight: 2, opacity: 0.8, fillOpacity: 0.1, dashArray: '4 4' };
-        var styleFazendas = { color: "#f59e0b", weight: 1.5, opacity: 1, fillColor: "#f59e0b", fillOpacity: 0.4 };
         var styleConservacao = { color: "#10b981", weight: 1.5, opacity: 1, fillColor: "#10b981", fillOpacity: 0.5 };
 
-        // Variáveis globais para armazenar as camadas
         var layerInfluencia, layerFazendas, layerConservacao;
 
-        // 5. CARREGAMENTO DOS ARQUIVOS GEOJSON
+        // 5. CARREGAMENTO DOS DADOS GEOJSON
         
-        // Carrega influencia.geojson
-        fetch('dados/influencia.geojson')
-            .then(res => res.json())
-            .then(data => {
-                layerInfluencia = L.geoJSON(data, { style: styleInfluencia, onEachFeature: createPopup }).addTo(map);
-                map.fitBounds(layerInfluencia.getBounds()); // Foca o mapa nesta camada
-            }).catch(e => console.log("Erro carregar Influência", e));
-
-        // Carrega fazendas.geojson e atualiza o painel de Insights
+        // Fazendas com contagem de Elegibilidade em tempo real
         fetch('dados/fazendas.geojson')
             .then(res => res.json())
             .then(data => {
                 layerFazendas = L.geoJSON(data, { style: styleFazendas, onEachFeature: createPopup }).addTo(map);
-                // INSIGHT: Contar feições
-                document.getElementById('count-fazendas').innerText = data.features.length;
-            }).catch(e => console.log("Erro carregar Fazendas", e));
+                
+                // Cálculo de Insights de Elegibilidade
+                let countElegivel = 0;
+                let countInelegivel = 0;
 
-        // Carrega CONSERVACAO.geojson e atualiza o painel de Insights
+                data.features.forEach(f => {
+                    let st = f.properties && f.properties.ELEGIBILIDADE 
+                        ? String(f.properties.ELEGIBILIDADE).trim().toUpperCase() 
+                        : '';
+                    if (st === 'ELEGÍVEL' || st === 'ELEGIVEL') countElegivel++;
+                    else if (st === 'INELEGÍVEL' || st === 'INELEGIVEL') countInelegivel++;
+                });
+
+                document.getElementById('count-elegivel').innerText = countElegivel;
+                document.getElementById('count-inelegivel').innerText = countInelegivel;
+            }).catch(e => console.log("Erro ao carregar Fazendas", e));
+
+        // Área de Influência
+        fetch('dados/influencia.geojson')
+            .then(res => res.json())
+            .then(data => {
+                layerInfluencia = L.geoJSON(data, { style: styleInfluencia, onEachFeature: createPopup }).addTo(map);
+                map.fitBounds(layerInfluencia.getBounds());
+            }).catch(e => console.log("Erro ao carregar Influência", e));
+
+        // Conservação
         fetch('dados/CONSERVACAO.geojson')
             .then(res => res.json())
             .then(data => {
                 layerConservacao = L.geoJSON(data, { style: styleConservacao, onEachFeature: createPopup }).addTo(map);
-                // INSIGHT: Contar feições
                 document.getElementById('count-conservacao').innerText = data.features.length;
-            }).catch(e => console.log("Erro carregar Conservação", e));
+            }).catch(e => console.log("Erro ao carregar Conservação", e));
 
-        // 6. LÓGICA DOS SWITCHES (Ligar/Desligar Camadas)
-        document.getElementById('toggle-influencia').addEventListener('change', function() {
-            if(this.checked) { map.addLayer(layerInfluencia); } 
-            else { map.removeLayer(layerInfluencia); }
+        // 6. TOGGLES DE CAMADAS
+        document.getElementById('toggle-fazendas').addEventListener('change', function() {
+            if(this.checked) { map.addLayer(layerFazendas); } else { map.removeLayer(layerFazendas); }
         });
 
-        document.getElementById('toggle-fazendas').addEventListener('change', function() {
-            if(this.checked) { map.addLayer(layerFazendas); } 
-            else { map.removeLayer(layerFazendas); }
+        document.getElementById('toggle-influencia').addEventListener('change', function() {
+            if(this.checked) { map.addLayer(layerInfluencia); } else { map.removeLayer(layerInfluencia); }
         });
 
         document.getElementById('toggle-conservacao').addEventListener('change', function() {
-            if(this.checked) { map.addLayer(layerConservacao); } 
-            else { map.removeLayer(layerConservacao); }
+            if(this.checked) { map.addLayer(layerConservacao); } else { map.removeLayer(layerConservacao); }
         });
 
     </script>
