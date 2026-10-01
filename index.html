@@ -3,86 +3,330 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebGIS - Monitoramento Ambiental</title>
+    <title>GEOPORTAL - Análise Espacial</title>
     
-    <!-- Importando o CSS do Leaflet para o visual do mapa -->
+    <!-- Fonte Google: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <style>
-        /* Reset básico e configuração de tela cheia */
+        :root {
+            --primary: #4ade80; /* Verde neon da referência */
+            --bg-dark: rgba(15, 23, 20, 0.85);
+            --bg-card: rgba(30, 41, 35, 0.9);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
         body, html {
             margin: 0;
             padding: 0;
             height: 100%;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            background-color: #000;
         }
         
         #map {
             width: 100%;
-            height: 100vh; /* Ocupa 100% da tela */
+            height: 100vh;
+            z-index: 1;
         }
 
-        /* Estilização da caixa do controle de camadas para ficar mais profissional */
-        .leaflet-control-layers {
-            border-radius: 8px !important;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
-            padding: 6px !important;
-            background: rgba(255, 255, 255, 0.95) !important;
+        /* Esconder o controle de zoom padrão para movê-lo */
+        .leaflet-control-zoom {
+            border: none !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+        }
+        .leaflet-control-zoom a {
+            background-color: var(--bg-card) !important;
+            color: var(--text-main) !important;
+            border-color: #333 !important;
+        }
+
+        /* ----------------------------------------- */
+        /* MENU LATERAL (SIDEBAR) ESTILO GLASSMORPHISM */
+        /* ----------------------------------------- */
+        #sidebar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 320px;
+            max-height: calc(100vh - 40px);
+            background: var(--bg-dark);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(74, 222, 128, 0.2);
+            border-radius: 16px;
+            z-index: 1000; /* Acima do mapa */
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            color: var(--text-main);
+            overflow-y: auto;
+        }
+
+        /* Custom Scrollbar para o menu */
+        #sidebar::-webkit-scrollbar { width: 6px; }
+        #sidebar::-webkit-scrollbar-track { background: transparent; }
+        #sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+
+        .sidebar-header h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .sidebar-header p {
+            margin: 5px 0 0 0;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .section {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        /* Radios customizados para Mapas de Fundo */
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .radio-label {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            cursor: pointer;
+            gap: 10px;
+        }
+        .radio-label input { accent-color: var(--primary); }
+
+        /* Toggles Customizados para Camadas */
+        .layer-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
         }
         
-        /* Personalização do Pop-up */
-        .leaflet-popup-content-wrapper {
+        .layer-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-box {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        /* Botão Switch Estilo iOS/Profissional */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 22px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255,255,255,0.2);
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px; width: 14px;
+            left: 4px; bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--primary); }
+        input:checked + .slider:before { transform: translateX(18px); }
+
+        /* Bloco de Insights */
+        .insight-card {
+            background: rgba(0,0,0,0.2);
             border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 3px solid var(--primary);
         }
-        .leaflet-popup-content {
-            margin: 15px;
-            font-size: 13px;
+        .insight-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
         }
-        .popup-table {
-            width: 100%;
-            border-collapse: collapse;
+        .insight-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
         }
-        .popup-table th, .popup-table td {
-            padding: 5px;
-            border-bottom: 1px solid #eee;
-            text-align: left;
+        
+        /* Popups do Leaflet em Dark Mode */
+        .leaflet-popup-content-wrapper {
+            background: var(--bg-card);
+            color: var(--text-main);
+            border-radius: 8px;
         }
-        .popup-table th {
-            color: #555;
-            font-weight: 600;
-        }
+        .leaflet-popup-tip { background: var(--bg-card); }
+        .popup-table { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif;}
+        .popup-table th, .popup-table td { padding: 6px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 12px; }
+        .popup-table th { color: var(--text-muted); text-align: left;}
     </style>
 </head>
 <body>
 
+    <!-- CONTAINER DO MAPA -->
     <div id="map"></div>
 
-    <!-- Importando o Javascript do Leaflet -->
+    <!-- SIDEBAR CUSTOMIZADA -->
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <h1>🌐 GEOPORTAL</h1>
+            <p>Análise Espacial • Monitoramento</p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Mapas de Fundo</div>
+            <div class="radio-group">
+                <label class="radio-label">
+                    <input type="radio" name="basemap" value="esri" checked>
+                    Esri Satellite
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="basemap" value="dark">
+                    Dark Matter (Escuro)
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="basemap" value="osm">
+                    OpenStreetMap
+                </label>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Camadas Operacionais</div>
+            
+            <!-- Controle Influência -->
+            <div class="layer-item">
+                <div class="layer-info">
+                    <div class="legend-box" style="background: rgba(59, 130, 246, 0.2); border-color: #3b82f6;"></div>
+                    <span>Área de Influência</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="toggle-influencia" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <!-- Controle Fazendas -->
+            <div class="layer-item">
+                <div class="layer-info">
+                    <div class="legend-box" style="background: rgba(245, 158, 11, 0.5); border-color: #f59e0b;"></div>
+                    <span>Imóveis Rurais (Fazendas)</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="toggle-fazendas" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <!-- Controle Conservação -->
+            <div class="layer-item">
+                <div class="layer-info">
+                    <div class="legend-box" style="background: rgba(16, 185, 129, 0.5); border-color: #10b981;"></div>
+                    <span>Áreas de Conservação</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="toggle-conservacao" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="section" style="border-bottom: none;">
+            <div class="section-title">Insights da Área</div>
+            
+            <div class="insight-card">
+                <div class="insight-value" id="count-fazendas">--</div>
+                <div class="insight-label">Imóveis Rurais Mapeados</div>
+            </div>
+            
+            <div class="insight-card">
+                <div class="insight-value" id="count-conservacao">--</div>
+                <div class="insight-label">Polígonos de Conservação</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        // 1. INICIALIZAÇÃO DO MAPA
-        // Coordenadas iniciais centralizadas no Brasil (ajuste conforme a área dos seus dados)
-        var map = L.map('map').setView([-10.0, -55.0], 5);
+        // 1. INICIALIZAÇÃO DO MAPA (Zoom posicionado no canto inferior direito igual à referência)
+        var map = L.map('map', { zoomControl: false }).setView([-10.0, -55.0], 5);
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        // 2. MAPAS BASE (BASEMAPS)
-        // Mapa de Satélite (Google)
-        var googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{
-            maxZoom: 20,
-            subdomains:['mt0','mt1','mt2','mt3'],
-            attribution: '© Google Satellite'
+        // 2. CONFIGURAÇÃO DOS MAPAS DE FUNDO
+        var basemaps = {
+            esri: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: 'Tiles &copy; Esri'
+            }),
+            dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap &copy; CARTO'
+            }),
+            osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            })
+        };
+        // Inicia com Esri Satellite
+        basemaps.esri.addTo(map);
+
+        // Lógica para alternar mapas de fundo via botões Radio do Menu
+        document.querySelectorAll('input[name="basemap"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                // Remove todos
+                Object.values(basemaps).forEach(layer => map.removeLayer(layer));
+                // Adiciona o selecionado
+                basemaps[this.value].addTo(map);
+            });
         });
 
-        // Mapa Claro/Clean (CartoDB Positron - excelente para destacar dados vetoriais)
-        var cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '© OpenStreetMap contributors © CARTO',
-            maxZoom: 20
-        }).addTo(map); // Definido como padrão ao abrir
-
-        // 3. FUNÇÃO PARA CRIAR POP-UPS DINÂMICOS
-        // Essa função lê os atributos do seu GeoJSON do QGIS e monta uma tabela HTML
-        function onEachFeature(feature, layer) {
+        // 3. FUNÇÃO POPUP DINÂMICO
+        function createPopup(feature, layer) {
             if (feature.properties) {
                 let popupContent = '<table class="popup-table">';
                 for (let key in feature.properties) {
@@ -94,61 +338,56 @@
         }
 
         // 4. ESTILOS DAS CAMADAS
-        var styleConservacao = { color: "#2E8B57", weight: 2, opacity: 1, fillColor: "#3CB371", fillOpacity: 0.5 };
-        var styleFazendas = { color: "#D2691E", weight: 2, opacity: 1, fillColor: "#CD853F", fillOpacity: 0.4 };
-        var styleInfluencia = { color: "#4169E1", weight: 3, opacity: 0.8, dashArray: '5, 10', fill: false };
+        var styleInfluencia = { color: "#3b82f6", weight: 2, opacity: 0.8, fillOpacity: 0.1, dashArray: '4 4' };
+        var styleFazendas = { color: "#f59e0b", weight: 1.5, opacity: 1, fillColor: "#f59e0b", fillOpacity: 0.4 };
+        var styleConservacao = { color: "#10b981", weight: 1.5, opacity: 1, fillColor: "#10b981", fillOpacity: 0.5 };
 
-        // 5. CARREGAMENTO DOS DADOS GEOJSON VIA FETCH API
-        // Criando grupos de camadas vazios para adicionar ao controle
-        var conservacaoLayer = L.layerGroup();
-        var fazendasLayer = L.layerGroup();
-        var influenciaLayer = L.layerGroup();
+        // Variáveis globais para armazenar as camadas
+        var layerInfluencia, layerFazendas, layerConservacao;
 
-        // Carregar CONSERVACAO.geojson
-        fetch('dados/CONSERVACAO.geojson')
-            .then(res => res.json())
-            .then(data => {
-                var layer = L.geoJSON(data, { style: styleConservacao, onEachFeature: onEachFeature });
-                conservacaoLayer.addLayer(layer);
-                conservacaoLayer.addTo(map); // Adiciona ligado por padrão
-                map.fitBounds(layer.getBounds()); // Dá zoom automático para a área dos dados
-            })
-            .catch(err => console.error("Erro ao carregar Conservação:", err));
-
-        // Carregar fazendas.geojson
-        fetch('dados/fazendas.geojson')
-            .then(res => res.json())
-            .then(data => {
-                var layer = L.geoJSON(data, { style: styleFazendas, onEachFeature: onEachFeature });
-                fazendasLayer.addLayer(layer);
-                fazendasLayer.addTo(map); // Adiciona ligado por padrão
-            })
-            .catch(err => console.error("Erro ao carregar Fazendas:", err));
-
-        // Carregar influencia.geojson
+        // 5. CARREGAMENTO DOS ARQUIVOS GEOJSON
+        
+        // Carrega influencia.geojson
         fetch('dados/influencia.geojson')
             .then(res => res.json())
             .then(data => {
-                var layer = L.geoJSON(data, { style: styleInfluencia, onEachFeature: onEachFeature });
-                influenciaLayer.addLayer(layer);
-                influenciaLayer.addTo(map); // Adiciona ligado por padrão
-            })
-            .catch(err => console.error("Erro ao carregar Influência:", err));
+                layerInfluencia = L.geoJSON(data, { style: styleInfluencia, onEachFeature: createPopup }).addTo(map);
+                map.fitBounds(layerInfluencia.getBounds()); // Foca o mapa nesta camada
+            }).catch(e => console.log("Erro carregar Influência", e));
 
-        // 6. CONTROLE DE CAMADAS (Ligar e Desligar)
-        var baseMaps = {
-            "Mapa Limpo (CartoDB)": cartoLight,
-            "Imagem de Satélite (Google)": googleSat
-        };
+        // Carrega fazendas.geojson e atualiza o painel de Insights
+        fetch('dados/fazendas.geojson')
+            .then(res => res.json())
+            .then(data => {
+                layerFazendas = L.geoJSON(data, { style: styleFazendas, onEachFeature: createPopup }).addTo(map);
+                // INSIGHT: Contar feições
+                document.getElementById('count-fazendas').innerText = data.features.length;
+            }).catch(e => console.log("Erro carregar Fazendas", e));
 
-        var overlayMaps = {
-            "<span style='color:#2E8B57; font-weight:bold;'>🟩 Áreas de Conservação</span>": conservacaoLayer,
-            "<span style='color:#D2691E; font-weight:bold;'>🟧 Fazendas</span>": fazendasLayer,
-            "<span style='color:#4169E1; font-weight:bold;'>🟦 Área de Influência</span>": influenciaLayer
-        };
+        // Carrega CONSERVACAO.geojson e atualiza o painel de Insights
+        fetch('dados/CONSERVACAO.geojson')
+            .then(res => res.json())
+            .then(data => {
+                layerConservacao = L.geoJSON(data, { style: styleConservacao, onEachFeature: createPopup }).addTo(map);
+                // INSIGHT: Contar feições
+                document.getElementById('count-conservacao').innerText = data.features.length;
+            }).catch(e => console.log("Erro carregar Conservação", e));
 
-        // Adiciona o painel de controle no canto superior direito
-        L.control.layers(baseMaps, overlayMaps, {collapsed: false}).addTo(map);
+        // 6. LÓGICA DOS SWITCHES (Ligar/Desligar Camadas)
+        document.getElementById('toggle-influencia').addEventListener('change', function() {
+            if(this.checked) { map.addLayer(layerInfluencia); } 
+            else { map.removeLayer(layerInfluencia); }
+        });
+
+        document.getElementById('toggle-fazendas').addEventListener('change', function() {
+            if(this.checked) { map.addLayer(layerFazendas); } 
+            else { map.removeLayer(layerFazendas); }
+        });
+
+        document.getElementById('toggle-conservacao').addEventListener('change', function() {
+            if(this.checked) { map.addLayer(layerConservacao); } 
+            else { map.removeLayer(layerConservacao); }
+        });
 
     </script>
 </body>
