@@ -34,21 +34,21 @@
 
         /* Seta Norte Customizada */
         .north-arrow {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 40px;
-            height: 40px;
-            z-index: 1000;
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; z-index: 1000;
+            background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
         .north-arrow svg { width: 24px; height: 24px; fill: var(--text-muted); }
+
+        /* Rastreador de Coordenadas do Mouse */
+        #coord-display {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: var(--bg-dark); color: var(--text-main); font-family: 'Inter', monospace;
+            font-size: 0.75rem; padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border-color);
+            z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.5); backdrop-filter: blur(12px);
+            pointer-events: none; /* Para não bloquear cliques no mapa */
+        }
+        #coord-display span { color: var(--text-muted); }
 
         /* MENU LATERAL */
         #sidebar {
@@ -91,20 +91,24 @@
         .accordion-btn:hover { background: rgba(255,255,255,0.1); }
         .accordion-content {
             padding: 10px; display: none; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color);
-            border-top: none; border-radius: 0 0 6px 6px; max-height: 250px; overflow-y: auto;
+            border-top: none; border-radius: 0 0 6px 6px; max-height: 300px; overflow-y: auto;
         }
         .accordion-content::-webkit-scrollbar { width: 4px; }
         .accordion-content::-webkit-scrollbar-thumb { background: #555; }
 
         /* Botões de Ação em Massa */
-        .mass-action-row { display: flex; gap: 5px; margin-bottom: 10px; }
+        .mass-action-row { display: flex; gap: 5px; margin-bottom: 15px; }
         .mass-btn {
             flex: 1; padding: 6px; background: #334155; color: #fff; border: 1px solid var(--border-color);
             border-radius: 4px; cursor: pointer; font-size: 0.75rem; transition: 0.2s;
         }
         .mass-btn:hover { background: #475569; }
 
-        /* Itens da Lista de Fazendas */
+        /* Categorias na Lista de Fazendas */
+        .category-header {
+            font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+            padding-bottom: 4px; margin-bottom: 8px; border-bottom: 1px solid var(--border-color);
+        }
         .farm-list-item { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 0.85rem; }
         .farm-list-item input[type="checkbox"] { accent-color: var(--primary); cursor: pointer; }
 
@@ -135,6 +139,9 @@
     <div class="north-arrow" title="Norte Verdadeiro">
         <svg viewBox="0 0 24 24"><path d="M12 2L8 22L12 17L16 22L12 2Z"/></svg>
     </div>
+
+    <!-- Indicador de Coordenadas em Tempo Real -->
+    <div id="coord-display"><span>Lat:</span> -- <span>| Long:</span> --</div>
 
     <div id="sidebar">
         <div class="sidebar-header">
@@ -171,15 +178,26 @@
                 </label>
             </div>
 
-            <!-- Lista Expansível de Fazendas -->
+            <!-- Lista Expansível de Fazendas Separada por Categoria -->
             <button class="accordion-btn" onclick="toggleAccordion()">📁 LISTA DE FAZENDAS <span>▼</span></button>
             <div class="accordion-content" id="accordion-fazendas">
                 <div class="mass-action-row">
                     <button class="mass-btn" onclick="marcarTodasLista(true)">Marcar Todos</button>
                     <button class="mass-btn" onclick="marcarTodasLista(false)">Desmarcar</button>
                 </div>
-                <div id="farm-list-container">
-                    <!-- Checkboxes injetados via JS -->
+                
+                <!-- Bloco Elegíveis -->
+                <div class="category-header" style="color: var(--elegivel);">✅ Elegíveis</div>
+                <div id="list-elegiveis" style="margin-bottom: 15px;"></div>
+                
+                <!-- Bloco Inelegíveis -->
+                <div class="category-header" style="color: var(--inelegivel);">❌ Inelegíveis</div>
+                <div id="list-inelegiveis"></div>
+
+                <!-- Bloco Outros (Oculto por padrão, caso falte informação) -->
+                <div id="wrapper-outros" style="display: none; margin-top: 15px;">
+                    <div class="category-header" style="color: var(--text-muted);">Indefinido</div>
+                    <div id="list-outros"></div>
                 </div>
             </div>
 
@@ -210,28 +228,30 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        // 1. INICIALIZAÇÃO DO MAPA COM ZOOM SUAVE
+        // 1. INICIALIZAÇÃO DO MAPA
         var map = L.map('map', { 
             zoomControl: false,
-            zoomSnap: 0.25,      // Permite zooms fracionados mais suaves
-            zoomDelta: 0.5,      // Velocidade do giro do mouse
-            wheelPxPerZoomLevel: 100 // Sensibilidade da roda do mouse
+            zoomSnap: 0.25,
+            zoomDelta: 0.5,
+            wheelPxPerZoomLevel: 100
         }).setView([-10.0, -55.0], 5);
         
         L.control.zoom({ position: 'bottomright' }).addTo(map);
-        
-        // Adiciona a barra de Escala (canto inferior esquerdo)
         L.control.scale({ metric: true, imperial: false, position: 'bottomleft' }).addTo(map);
 
-        // 2. MAPAS DE FUNDO
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri' }).addTo(map);
+
+        // 2. RASTREADOR DE COORDENADAS (MOUSE MOVE)
+        var coordDisplay = document.getElementById('coord-display');
+        map.on('mousemove', function(e) {
+            coordDisplay.innerHTML = `<span>Lat:</span> ${e.latlng.lat.toFixed(5)} <span>| Long:</span> ${e.latlng.lng.toFixed(5)}`;
+        });
 
         // 3. VARIÁVEIS GLOBAIS
         var layerInfluencia, layerConservacao;
-        var grupoFazendas = L.featureGroup().addTo(map); // Grupo que controla todas as fazendas
-        var dicionarioFazendas = {}; // Guarda a referência individual de cada fazenda (layer)
+        var grupoFazendas = L.featureGroup().addTo(map);
+        var dicionarioFazendas = {}; 
 
-        // Estilos
         var styleInfluencia = { color: "#3b82f6", weight: 2, opacity: 0.8, fillOpacity: 0.1, dashArray: '4 4' };
         var styleConservacao = { color: "#10b981", weight: 1.5, opacity: 1, fillColor: "#10b981", fillOpacity: 0.5 };
 
@@ -242,7 +262,6 @@
             return { color: '#94a3b8', weight: 1.5, fillOpacity: 0 };
         }
 
-        // Popup Dinâmico
         function createPopup(feature, layer) {
             if (feature.properties) {
                 let popupContent = '<table class="popup-table">';
@@ -254,82 +273,76 @@
             }
         }
 
-        // 4. CARREGAMENTO DOS DADOS (FAZENDAS INDIVIDUAIS)
+        // 4. CARREGAMENTO DOS DADOS - SEPARAÇÃO DAS FAZENDAS
         fetch('dados/fazendas.geojson')
             .then(res => res.json())
             .then(data => {
-                let listContainer = document.getElementById('farm-list-container');
+                let contElegiveis = document.getElementById('list-elegiveis');
+                let contInelegiveis = document.getElementById('list-inelegiveis');
+                let contOutros = document.getElementById('list-outros');
+                let wrapperOutros = document.getElementById('wrapper-outros');
                 
                 data.features.forEach((feature, index) => {
-                    // Tenta identificar o nome ou código da fazenda; se não houver, usa índice numérico
                     let idFazenda = feature.properties.NOME || feature.properties.CODIGO || feature.properties.nome || feature.properties.codigo || `Fazenda ${index + 1}`;
-                    
-                    // Cria a camada (layer) individual para essa fazenda
                     let layer = L.geoJSON(feature, { style: styleFazendas, onEachFeature: createPopup });
                     
-                    // Salva no dicionário e adiciona ao grupo mestre
                     dicionarioFazendas[idFazenda] = layer;
                     grupoFazendas.addLayer(layer);
 
-                    // Cria o item da lista de checkbox na barra lateral
                     let checkboxHTML = `
                         <div class="farm-list-item">
                             <input type="checkbox" id="chk-${idFazenda}" checked onchange="toggleFazendaIndividual('${idFazenda}', this.checked)">
                             <label for="chk-${idFazenda}">${idFazenda}</label>
                         </div>
                     `;
-                    listContainer.insertAdjacentHTML('beforeend', checkboxHTML);
+
+                    // Lógica de Separação
+                    let status = feature.properties && feature.properties.ELEGIBILIDADE ? String(feature.properties.ELEGIBILIDADE).trim().toUpperCase() : '';
+                    if (status === 'ELEGÍVEL' || status === 'ELEGIVEL') {
+                        contElegiveis.insertAdjacentHTML('beforeend', checkboxHTML);
+                    } else if (status === 'INELEGÍVEL' || status === 'INELEGIVEL') {
+                        contInelegiveis.insertAdjacentHTML('beforeend', checkboxHTML);
+                    } else {
+                        wrapperOutros.style.display = 'block';
+                        contOutros.insertAdjacentHTML('beforeend', checkboxHTML);
+                    }
                 });
                 map.fitBounds(grupoFazendas.getBounds());
             });
 
-        // Carrega Área de Influência
+        // Áreas de Influência e Conservação
         fetch('dados/influencia.geojson').then(res => res.json()).then(data => {
             layerInfluencia = L.geoJSON(data, { style: styleInfluencia, onEachFeature: createPopup }).addTo(map);
         });
-
-        // Carrega Conservação
         fetch('dados/CONSERVACAO.geojson').then(res => res.json()).then(data => {
             layerConservacao = L.geoJSON(data, { style: styleConservacao, onEachFeature: createPopup }).addTo(map);
         });
 
-        // 5. LÓGICA DE CONTROLE DA LISTA E DOS BOTÕES
-
-        // Liga/Desliga fazenda individual
+        // 5. CONTROLES DE CAMADAS
         function toggleFazendaIndividual(idFazenda, isChecked) {
             let layer = dicionarioFazendas[idFazenda];
-            if (isChecked) {
-                grupoFazendas.addLayer(layer);
-            } else {
-                grupoFazendas.removeLayer(layer);
-            }
+            if (isChecked) grupoFazendas.addLayer(layer); else grupoFazendas.removeLayer(layer);
         }
 
-        // Marcar/Desmarcar todas na lista (Accordion)
         function marcarTodasLista(marcar) {
             for (let idFazenda in dicionarioFazendas) {
                 let checkbox = document.getElementById(`chk-${idFazenda}`);
                 if (checkbox) checkbox.checked = marcar;
                 toggleFazendaIndividual(idFazenda, marcar);
             }
-            // Sincroniza o botão mestre global
             document.getElementById('toggle-todas-fazendas').checked = marcar;
         }
 
-        // Toggle Mestre (Switch fora do Accordion)
         function toggleMasterFazendas(isChecked) {
             marcarTodasLista(isChecked);
         }
 
-        // Abre/Fecha o Accordion
         function toggleAccordion() {
             let content = document.getElementById("accordion-fazendas");
             content.style.display = content.style.display === "block" ? "none" : "block";
         }
 
         // 6. SISTEMAS DE BUSCA
-        
-        // Buscar por Nome/Código
         function buscarFazenda() {
             let termo = document.getElementById('input-busca-fazenda').value.toLowerCase().trim();
             if(!termo) return;
@@ -337,40 +350,29 @@
             for (let idFazenda in dicionarioFazendas) {
                 if (idFazenda.toLowerCase().includes(termo)) {
                     let layer = dicionarioFazendas[idFazenda];
-                    
-                    // Garante que a fazenda está visível
                     document.getElementById(`chk-${idFazenda}`).checked = true;
                     toggleFazendaIndividual(idFazenda, true);
 
-                    // Voa suavemente (flyToBounds) até a fazenda e abre o popup
                     let bounds = layer.getBounds();
                     map.flyToBounds(bounds, { duration: 1.5 });
                     
-                    // Espera a animação terminar para abrir o popup
-                    setTimeout(() => {
-                        layer.eachLayer(function(l) { l.openPopup(); });
-                    }, 1500);
-                    return; // Para no primeiro que encontrar
+                    setTimeout(() => { layer.eachLayer(function(l) { l.openPopup(); }); }, 1500);
+                    return; 
                 }
             }
             alert("Fazenda não encontrada.");
         }
 
-        // Buscar por Coordenadas (Marcador Temporário)
         var tempMarker;
         function buscarCoordenada() {
             let texto = document.getElementById('input-busca-coord').value;
-            // Tenta quebrar o texto por vírgula
             let partes = texto.split(',');
             if(partes.length === 2) {
                 let lat = parseFloat(partes[0].trim());
                 let lng = parseFloat(partes[1].trim());
 
                 if(!isNaN(lat) && !isNaN(lng)) {
-                    // Limpa marcador anterior se houver
                     if(tempMarker) map.removeLayer(tempMarker);
-                    
-                    // Voo suave e adiciona pino
                     map.flyTo([lat, lng], 16, { duration: 1.5 });
                     tempMarker = L.marker([lat, lng]).addTo(map).bindPopup("Coordenada Pesquisada").openPopup();
                     return;
@@ -379,7 +381,6 @@
             alert("Formato inválido. Use: Latitude, Longitude (ex: -21.2, -43.7)");
         }
 
-        // Toggles das outras camadas
         document.getElementById('toggle-conservacao').addEventListener('change', function() {
             if(this.checked) map.addLayer(layerConservacao); else map.removeLayer(layerConservacao);
         });
