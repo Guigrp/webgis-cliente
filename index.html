@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GEOPORTAL - Análise Espacial Avançada</title>
+    <title>GEOPORTAL - Análise Espacial Dinâmica</title>
     
     <!-- Fonte Google: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -45,8 +45,7 @@
             position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
             background: var(--bg-dark); color: var(--text-main); font-family: 'Inter', monospace;
             font-size: 0.75rem; padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border-color);
-            z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.5); backdrop-filter: blur(12px);
-            pointer-events: none; /* Para não bloquear cliques no mapa */
+            z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.5); backdrop-filter: blur(12px); pointer-events: none;
         }
         #coord-display span { color: var(--text-muted); }
 
@@ -91,12 +90,11 @@
         .accordion-btn:hover { background: rgba(255,255,255,0.1); }
         .accordion-content {
             padding: 10px; display: none; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color);
-            border-top: none; border-radius: 0 0 6px 6px; max-height: 300px; overflow-y: auto;
+            border-top: none; border-radius: 0 0 6px 6px; max-height: 250px; overflow-y: auto;
         }
         .accordion-content::-webkit-scrollbar { width: 4px; }
         .accordion-content::-webkit-scrollbar-thumb { background: #555; }
 
-        /* Botões de Ação em Massa */
         .mass-action-row { display: flex; gap: 5px; margin-bottom: 15px; }
         .mass-btn {
             flex: 1; padding: 6px; background: #334155; color: #fff; border: 1px solid var(--border-color);
@@ -105,12 +103,29 @@
         .mass-btn:hover { background: #475569; }
 
         /* Categorias na Lista de Fazendas */
-        .category-header {
-            font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
-            padding-bottom: 4px; margin-bottom: 8px; border-bottom: 1px solid var(--border-color);
-        }
+        .category-header { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; padding-bottom: 4px; margin-bottom: 8px; border-bottom: 1px solid var(--border-color); }
         .farm-list-item { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 0.85rem; }
-        .farm-list-item input[type="checkbox"] { accent-color: var(--primary); cursor: pointer; }
+        
+        /* Checkboxes com cores por categoria */
+        .farm-list-item input[type="checkbox"] { cursor: pointer; }
+        .chk-elegivel { accent-color: var(--elegivel); }
+        .chk-inelegivel { accent-color: var(--inelegivel); }
+        
+        /* Label clicável para zoom duplo */
+        .farm-label { flex: 1; cursor: pointer; user-select: none; transition: color 0.2s; }
+        .farm-label:hover { color: var(--primary); }
+
+        /* Painel Dinâmico de Análises (Insights) */
+        .insight-card {
+            background: rgba(0,0,0,0.3); border-radius: 6px; padding: 10px;
+            border-left: 3px solid; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;
+        }
+        .insight-title-group { display: flex; flex-direction: column; }
+        .insight-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
+        .insight-qtd { font-size: 1.25rem; font-weight: 700; line-height: 1.2; }
+        .insight-data-group { text-align: right; display: flex; flex-direction: column; }
+        .insight-area { font-size: 0.85rem; color: #fff; font-weight: 500; }
+        .insight-perc { font-size: 0.7rem; color: var(--text-muted); }
 
         /* Switches Globais */
         .layer-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font-size: 0.85rem; }
@@ -122,7 +137,7 @@
         input:checked + .slider { background-color: var(--primary); }
         input:checked + .slider:before { transform: translateX(16px); }
 
-        /* POPUP ESCURO ESTILO DARK MODE */
+        /* POPUP ESCURO */
         .leaflet-popup-content-wrapper { background: var(--bg-card) !important; color: var(--text-main) !important; border: 1px solid var(--border-color); border-radius: 8px; }
         .leaflet-popup-tip { background: var(--bg-card) !important; }
         .leaflet-popup-close-button { color: var(--text-muted) !important; }
@@ -135,12 +150,10 @@
 
     <div id="map"></div>
 
-    <!-- Seta Norte -->
     <div class="north-arrow" title="Norte Verdadeiro">
         <svg viewBox="0 0 24 24"><path d="M12 2L8 22L12 17L16 22L12 2Z"/></svg>
     </div>
 
-    <!-- Indicador de Coordenadas em Tempo Real -->
     <div id="coord-display"><span>Lat:</span> -- <span>| Long:</span> --</div>
 
     <div id="sidebar">
@@ -150,12 +163,10 @@
 
         <div class="section">
             <div class="section-title">Busca e Localização</div>
-            
             <div class="search-row">
                 <input type="text" id="input-busca-fazenda" class="search-input" placeholder="Cód. Fazenda ou Nome">
                 <button class="search-btn" onclick="buscarFazenda()">Buscar</button>
             </div>
-
             <div class="search-row">
                 <input type="text" id="input-busca-coord" class="search-input" placeholder="Lat, Long (ex: -21.2, -43.7)">
                 <button class="search-btn" style="padding: 0 10px;" onclick="buscarCoordenada()">📍</button>
@@ -165,7 +176,6 @@
         <div class="section">
             <div class="section-title">Camadas Operacionais</div>
             
-            <!-- Controle Mestre das Fazendas -->
             <div class="layer-item">
                 <div class="layer-info">
                     <span style="display:inline-block; width:12px; height:12px; border:2px solid var(--elegivel);"></span>
@@ -178,23 +188,20 @@
                 </label>
             </div>
 
-            <!-- Lista Expansível de Fazendas Separada por Categoria -->
-            <button class="accordion-btn" onclick="toggleAccordion()">📁 LISTA DE FAZENDAS <span>▼</span></button>
+            <!-- Botão da Lista de Fazendas sem o ícone da pasta -->
+            <button class="accordion-btn" onclick="toggleAccordion()">LISTA DE FAZENDAS <span>▼</span></button>
             <div class="accordion-content" id="accordion-fazendas">
                 <div class="mass-action-row">
                     <button class="mass-btn" onclick="marcarTodasLista(true)">Marcar Todos</button>
                     <button class="mass-btn" onclick="marcarTodasLista(false)">Desmarcar</button>
                 </div>
                 
-                <!-- Bloco Elegíveis -->
                 <div class="category-header" style="color: var(--elegivel);">✅ Elegíveis</div>
                 <div id="list-elegiveis" style="margin-bottom: 15px;"></div>
                 
-                <!-- Bloco Inelegíveis -->
                 <div class="category-header" style="color: var(--inelegivel);">❌ Inelegíveis</div>
                 <div id="list-inelegiveis"></div>
-
-                <!-- Bloco Outros (Oculto por padrão, caso falte informação) -->
+                
                 <div id="wrapper-outros" style="display: none; margin-top: 15px;">
                     <div class="category-header" style="color: var(--text-muted);">Indefinido</div>
                     <div id="list-outros"></div>
@@ -223,6 +230,44 @@
                 </label>
             </div>
         </div>
+
+        <!-- Bloco de Análise Dinâmica -->
+        <div class="section" style="border-bottom: none;">
+            <div class="section-title">Análise Dinâmica (Visíveis)</div>
+            
+            <div class="insight-card" style="border-left-color: var(--text-muted);">
+                <div class="insight-title-group">
+                    <span class="insight-label">Total Visível</span>
+                    <span class="insight-qtd" id="ins-total-qtd" style="color: #fff;">0</span>
+                </div>
+                <div class="insight-data-group">
+                    <span class="insight-area" id="ins-total-area">0.00 km²</span>
+                    <span class="insight-perc">100% da área</span>
+                </div>
+            </div>
+
+            <div class="insight-card" style="border-left-color: var(--elegivel);">
+                <div class="insight-title-group">
+                    <span class="insight-label">Elegíveis</span>
+                    <span class="insight-qtd" id="ins-eleg-qtd" style="color: var(--elegivel);">0</span>
+                </div>
+                <div class="insight-data-group">
+                    <span class="insight-area" id="ins-eleg-area">0.00 km²</span>
+                    <span class="insight-perc" id="ins-eleg-perc">0% da área</span>
+                </div>
+            </div>
+
+            <div class="insight-card" style="border-left-color: var(--inelegivel);">
+                <div class="insight-title-group">
+                    <span class="insight-label">Inelegíveis</span>
+                    <span class="insight-qtd" id="ins-inel-qtd" style="color: var(--inelegivel);">0</span>
+                </div>
+                <div class="insight-data-group">
+                    <span class="insight-area" id="ins-inel-area">0.00 km²</span>
+                    <span class="insight-perc" id="ins-inel-perc">0% da área</span>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -230,10 +275,7 @@
     <script>
         // 1. INICIALIZAÇÃO DO MAPA
         var map = L.map('map', { 
-            zoomControl: false,
-            zoomSnap: 0.25,
-            zoomDelta: 0.5,
-            wheelPxPerZoomLevel: 100
+            zoomControl: false, zoomSnap: 0.25, zoomDelta: 0.5, wheelPxPerZoomLevel: 100
         }).setView([-10.0, -55.0], 5);
         
         L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -241,16 +283,17 @@
 
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri' }).addTo(map);
 
-        // 2. RASTREADOR DE COORDENADAS (MOUSE MOVE)
+        // 2. RASTREADOR DE COORDENADAS
         var coordDisplay = document.getElementById('coord-display');
         map.on('mousemove', function(e) {
             coordDisplay.innerHTML = `<span>Lat:</span> ${e.latlng.lat.toFixed(5)} <span>| Long:</span> ${e.latlng.lng.toFixed(5)}`;
         });
 
-        // 3. VARIÁVEIS GLOBAIS
+        // 3. VARIÁVEIS GLOBAIS DE DADOS
         var layerInfluencia, layerConservacao;
         var grupoFazendas = L.featureGroup().addTo(map);
         var dicionarioFazendas = {}; 
+        var metadadosFazendas = {}; // Guarda status, área e visibilidade para cálculos dinâmicos
 
         var styleInfluencia = { color: "#3b82f6", weight: 2, opacity: 0.8, fillOpacity: 0.1, dashArray: '4 4' };
         var styleConservacao = { color: "#10b981", weight: 1.5, opacity: 1, fillColor: "#10b981", fillOpacity: 0.5 };
@@ -273,90 +316,145 @@
             }
         }
 
-        // 4. CARREGAMENTO DOS DADOS - SEPARAÇÃO DAS FAZENDAS
+        // Função do Duplo Clique para Zoom
+        window.zoomToFazenda = function(idFazenda) {
+            let layer = dicionarioFazendas[idFazenda];
+            if (layer) {
+                // Força ativação visual da camada se estiver desligada
+                document.getElementById(`chk-${idFazenda}`).checked = true;
+                toggleFazendaIndividual(idFazenda, true);
+
+                let bounds = layer.getBounds();
+                map.flyToBounds(bounds, { duration: 1.5, padding: [50, 50] });
+                setTimeout(() => { layer.eachLayer(function(l) { l.openPopup(); }); }, 1500);
+            }
+        };
+
+        // 4. CÁLCULO DINÂMICO DOS INSIGHTS
+        function atualizarInsights() {
+            let countTotal = 0, countElegivel = 0, countInelegivel = 0;
+            let areaTotal = 0, areaElegivel = 0, areaInelegivel = 0;
+
+            for (let id in metadadosFazendas) {
+                let faz = metadadosFazendas[id];
+                if (faz.visivel) {
+                    countTotal++;
+                    areaTotal += faz.area;
+                    if (faz.status === 'ELEGÍVEL') { countElegivel++; areaElegivel += faz.area; }
+                    else if (faz.status === 'INELEGÍVEL') { countInelegivel++; areaInelegivel += faz.area; }
+                }
+            }
+
+            let percElegivel = areaTotal > 0 ? ((areaElegivel / areaTotal) * 100).toFixed(1) : 0;
+            let percInelegivel = areaTotal > 0 ? ((areaInelegivel / areaTotal) * 100).toFixed(1) : 0;
+
+            // Inserindo dados no DOM
+            document.getElementById('ins-total-qtd').innerText = countTotal;
+            document.getElementById('ins-total-area').innerText = areaTotal.toFixed(2) + ' km²';
+            
+            document.getElementById('ins-eleg-qtd').innerText = countElegivel;
+            document.getElementById('ins-eleg-area').innerText = areaElegivel.toFixed(2) + ' km²';
+            document.getElementById('ins-eleg-perc').innerText = percElegivel + '% da área';
+
+            document.getElementById('ins-inel-qtd').innerText = countInelegivel;
+            document.getElementById('ins-inel-area').innerText = areaInelegivel.toFixed(2) + ' km²';
+            document.getElementById('ins-inel-perc').innerText = percInelegivel + '% da área';
+        }
+
+        // 5. CARREGAMENTO DOS DADOS GEOJSON
         fetch('dados/fazendas.geojson')
             .then(res => res.json())
             .then(data => {
                 let contElegiveis = document.getElementById('list-elegiveis');
                 let contInelegiveis = document.getElementById('list-inelegiveis');
                 let contOutros = document.getElementById('list-outros');
-                let wrapperOutros = document.getElementById('wrapper-outros');
                 
                 data.features.forEach((feature, index) => {
-                    let idFazenda = feature.properties.NOME || feature.properties.CODIGO || feature.properties.nome || feature.properties.codigo || `Fazenda ${index + 1}`;
+                    let idFazenda = feature.properties.NOME || feature.properties.CODIGO || feature.properties.nome || `Fazenda ${index + 1}`;
                     let layer = L.geoJSON(feature, { style: styleFazendas, onEachFeature: createPopup });
                     
                     dicionarioFazendas[idFazenda] = layer;
                     grupoFazendas.addLayer(layer);
 
+                    // Tratamento flexível de área (identifica coluna AREA_KM2, AREA_HA ou AREA genérica)
+                    let pArea = feature.properties.AREA_KM2 || feature.properties.AREA || feature.properties.area_km2 || 0;
+                    
+                    let status = feature.properties && feature.properties.ELEGIBILIDADE ? String(feature.properties.ELEGIBILIDADE).trim().toUpperCase() : 'OUTRO';
+                    let flagStatus = (status === 'ELEGÍVEL' || status === 'ELEGIVEL') ? 'ELEGÍVEL' : (status === 'INELEGÍVEL' || status === 'INELEGIVEL' ? 'INELEGÍVEL' : 'OUTRO');
+
+                    // Salva metadados para os cálculos de dashboard
+                    metadadosFazendas[idFazenda] = {
+                        status: flagStatus,
+                        area: parseFloat(pArea),
+                        visivel: true
+                    };
+
+                    // Verifica qual classe de cor (Verde ou Vermelha) usar no Checkbox
+                    let chkClass = flagStatus === 'INELEGÍVEL' ? 'chk-inelegivel' : 'chk-elegivel';
+
                     let checkboxHTML = `
                         <div class="farm-list-item">
-                            <input type="checkbox" id="chk-${idFazenda}" checked onchange="toggleFazendaIndividual('${idFazenda}', this.checked)">
-                            <label for="chk-${idFazenda}">${idFazenda}</label>
+                            <input type="checkbox" id="chk-${idFazenda}" class="${chkClass}" checked onchange="toggleFazendaIndividual('${idFazenda}', this.checked)">
+                            <label class="farm-label" for="chk-${idFazenda}" ondblclick="zoomToFazenda('${idFazenda}')" title="Duplo clique para aplicar Zoom">${idFazenda}</label>
                         </div>
                     `;
 
-                    // Lógica de Separação
-                    let status = feature.properties && feature.properties.ELEGIBILIDADE ? String(feature.properties.ELEGIBILIDADE).trim().toUpperCase() : '';
-                    if (status === 'ELEGÍVEL' || status === 'ELEGIVEL') {
-                        contElegiveis.insertAdjacentHTML('beforeend', checkboxHTML);
-                    } else if (status === 'INELEGÍVEL' || status === 'INELEGIVEL') {
-                        contInelegiveis.insertAdjacentHTML('beforeend', checkboxHTML);
-                    } else {
-                        wrapperOutros.style.display = 'block';
+                    if (flagStatus === 'ELEGÍVEL') contElegiveis.insertAdjacentHTML('beforeend', checkboxHTML);
+                    else if (flagStatus === 'INELEGÍVEL') contInelegiveis.insertAdjacentHTML('beforeend', checkboxHTML);
+                    else {
+                        document.getElementById('wrapper-outros').style.display = 'block';
                         contOutros.insertAdjacentHTML('beforeend', checkboxHTML);
                     }
                 });
                 map.fitBounds(grupoFazendas.getBounds());
+                atualizarInsights(); // Primeira renderização dos cálculos dinâmicos
             });
 
         // Áreas de Influência e Conservação
-        fetch('dados/influencia.geojson').then(res => res.json()).then(data => {
-            layerInfluencia = L.geoJSON(data, { style: styleInfluencia, onEachFeature: createPopup }).addTo(map);
-        });
-        fetch('dados/CONSERVACAO.geojson').then(res => res.json()).then(data => {
-            layerConservacao = L.geoJSON(data, { style: styleConservacao, onEachFeature: createPopup }).addTo(map);
-        });
+        fetch('dados/influencia.geojson').then(res => res.json()).then(data => { layerInfluencia = L.geoJSON(data, { style: styleInfluencia, onEachFeature: createPopup }).addTo(map); });
+        fetch('dados/CONSERVACAO.geojson').then(res => res.json()).then(data => { layerConservacao = L.geoJSON(data, { style: styleConservacao, onEachFeature: createPopup }).addTo(map); });
 
-        // 5. CONTROLES DE CAMADAS
-        function toggleFazendaIndividual(idFazenda, isChecked) {
+        // 6. CONTROLES DE CAMADAS INTERATIVAS
+        window.toggleFazendaIndividual = function(idFazenda, isChecked) {
             let layer = dicionarioFazendas[idFazenda];
             if (isChecked) grupoFazendas.addLayer(layer); else grupoFazendas.removeLayer(layer);
+            
+            // Atualiza status de visibilidade no banco de metadados e recalcula dashboard
+            if (metadadosFazendas[idFazenda]) metadadosFazendas[idFazenda].visivel = isChecked;
+            atualizarInsights();
         }
 
-        function marcarTodasLista(marcar) {
+        window.marcarTodasLista = function(marcar) {
             for (let idFazenda in dicionarioFazendas) {
                 let checkbox = document.getElementById(`chk-${idFazenda}`);
                 if (checkbox) checkbox.checked = marcar;
-                toggleFazendaIndividual(idFazenda, marcar);
+                
+                let layer = dicionarioFazendas[idFazenda];
+                if (marcar) grupoFazendas.addLayer(layer); else grupoFazendas.removeLayer(layer);
+                
+                if (metadadosFazendas[idFazenda]) metadadosFazendas[idFazenda].visivel = marcar;
             }
             document.getElementById('toggle-todas-fazendas').checked = marcar;
+            atualizarInsights();
         }
 
-        function toggleMasterFazendas(isChecked) {
+        window.toggleMasterFazendas = function(isChecked) {
             marcarTodasLista(isChecked);
         }
 
-        function toggleAccordion() {
+        window.toggleAccordion = function() {
             let content = document.getElementById("accordion-fazendas");
             content.style.display = content.style.display === "block" ? "none" : "block";
         }
 
-        // 6. SISTEMAS DE BUSCA
-        function buscarFazenda() {
+        // 7. SISTEMAS DE BUSCA
+        window.buscarFazenda = function() {
             let termo = document.getElementById('input-busca-fazenda').value.toLowerCase().trim();
             if(!termo) return;
 
             for (let idFazenda in dicionarioFazendas) {
                 if (idFazenda.toLowerCase().includes(termo)) {
-                    let layer = dicionarioFazendas[idFazenda];
-                    document.getElementById(`chk-${idFazenda}`).checked = true;
-                    toggleFazendaIndividual(idFazenda, true);
-
-                    let bounds = layer.getBounds();
-                    map.flyToBounds(bounds, { duration: 1.5 });
-                    
-                    setTimeout(() => { layer.eachLayer(function(l) { l.openPopup(); }); }, 1500);
+                    zoomToFazenda(idFazenda); // Reutiliza a nova função de zoom
                     return; 
                 }
             }
@@ -364,13 +462,11 @@
         }
 
         var tempMarker;
-        function buscarCoordenada() {
+        window.buscarCoordenada = function() {
             let texto = document.getElementById('input-busca-coord').value;
             let partes = texto.split(',');
             if(partes.length === 2) {
-                let lat = parseFloat(partes[0].trim());
-                let lng = parseFloat(partes[1].trim());
-
+                let lat = parseFloat(partes[0].trim()); let lng = parseFloat(partes[1].trim());
                 if(!isNaN(lat) && !isNaN(lng)) {
                     if(tempMarker) map.removeLayer(tempMarker);
                     map.flyTo([lat, lng], 16, { duration: 1.5 });
@@ -381,12 +477,8 @@
             alert("Formato inválido. Use: Latitude, Longitude (ex: -21.2, -43.7)");
         }
 
-        document.getElementById('toggle-conservacao').addEventListener('change', function() {
-            if(this.checked) map.addLayer(layerConservacao); else map.removeLayer(layerConservacao);
-        });
-        document.getElementById('toggle-influencia').addEventListener('change', function() {
-            if(this.checked) map.addLayer(layerInfluencia); else map.removeLayer(layerInfluencia);
-        });
+        document.getElementById('toggle-conservacao').addEventListener('change', function() { if(this.checked) map.addLayer(layerConservacao); else map.removeLayer(layerConservacao); });
+        document.getElementById('toggle-influencia').addEventListener('change', function() { if(this.checked) map.addLayer(layerInfluencia); else map.removeLayer(layerInfluencia); });
 
     </script>
 </body>
