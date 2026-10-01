@@ -2,92 +2,154 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>WebGIS - Painel Interativo</title>
-    <!-- Adicionando o Leaflet (Biblioteca de Mapas) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGIS - Monitoramento Ambiental</title>
+    
+    <!-- Importando o CSS do Leaflet para o visual do mapa -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        #map { height: 100%; width: 100%; z-index: 1; }
+        /* Reset básico e configuração de tela cheia */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
         
-        /* Menu Lateral (Painel de Controle) */
-        #sidebar {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            width: 320px;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 20px;
-            z-index: 1000;
+        #map {
+            width: 100%;
+            height: 100vh; /* Ocupa 100% da tela */
+        }
+
+        /* Estilização da caixa do controle de camadas para ficar mais profissional */
+        .leaflet-control-layers {
+            border-radius: 8px !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+            padding: 6px !important;
+            background: rgba(255, 255, 255, 0.95) !important;
+        }
+        
+        /* Personalização do Pop-up */
+        .leaflet-popup-content-wrapper {
             border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
-        h2 { margin-top: 0; font-size: 18px; color: #333; border-bottom: 2px solid #0078A8; padding-bottom: 10px; }
-        
-        /* Barra de Pesquisa de Fazenda */
-        .search-container { display: flex; gap: 5px; margin-bottom: 20px; }
-        #search-box { flex-grow: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
-        #search-btn { padding: 8px 12px; background: #0078A8; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        
-        /* Controle de Camadas */
-        .layer-group { margin-bottom: 15px; }
-        .layer-group strong { display: block; font-size: 13px; color: #555; margin-bottom: 8px; }
-        .layer-item { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 5px; }
-        .legend-color { width: 14px; height: 14px; border: 1px solid #999; border-radius: 3px; }
+        .leaflet-popup-content {
+            margin: 15px;
+            font-size: 13px;
+        }
+        .popup-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .popup-table th, .popup-table td {
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+        }
+        .popup-table th {
+            color: #555;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
 
-    <!-- Menu Lateral com Botões Ligar/Desligar -->
-    <div id="sidebar">
-        <h2>Painel do Cliente Fictício</h2>
-        
-        <div class="search-container">
-            <input type="text" id="search-box" placeholder="Código Fazenda (ex: 1003)">
-            <button id="search-btn">Buscar</button>
-        </div>
-
-        <div class="layer-group">
-            <strong>LIMITES DO PROJETO</strong>
-            <label class="layer-item"><input type="checkbox" checked> <div class="legend-color" style="background: rgba(255,0,0,0.2); border-color: red;"></div> Área de Influência Direta</label>
-            <label class="layer-item"><input type="checkbox" checked> <div class="legend-color" style="background: rgba(0,0,255,0.4); border-color: blue;"></div> Área Diretamente Afetada</label>
-        </div>
-
-        <div class="layer-group">
-            <strong>CAMADAS AMBIENTAIS</strong>
-            <label class="layer-item"><input type="checkbox"> <div class="legend-color" style="background: #8B4513;"></div> Pedologia (EMBRAPA)</label>
-            <label class="layer-item"><input type="checkbox"> <div class="legend-color" style="background: #228B22;"></div> Unidades de Conservação</label>
-            <label class="layer-item"><input type="checkbox"> <div class="legend-color" style="background: #FF8C00;"></div> Terras Indígenas (FUNAI)</label>
-        </div>
-    </div>
-
-    <!-- Onde o mapa será renderizado -->
     <div id="map"></div>
 
+    <!-- Importando o Javascript do Leaflet -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <script>
-        // Inicializa o mapa com o controle de zoom na direita para não sobrepor o menu
-        var map = L.map('map', { zoomControl: false }).setView([-20.442, -54.646], 6);
-        L.control.zoom({ position: 'topright' }).addTo(map);
+        // 1. INICIALIZAÇÃO DO MAPA
+        // Coordenadas iniciais centralizadas no Brasil (ajuste conforme a área dos seus dados)
+        var map = L.map('map').setView([-10.0, -55.0], 5);
 
-        // Mapa Base (Google Maps / OpenStreetMap)
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-
-        // Simulando a Área Diretamente Afetada
-        var fazenda = L.polygon([
-            [-20.0, -54.5], [-20.0, -54.2], [-20.3, -54.2], [-20.3, -54.5]
-        ], { color: 'blue', fillColor: 'blue', fillOpacity: 0.4 }).addTo(map);
-        fazenda.bindPopup("<b>Fazenda Exemplo</b><br>Código: 1003");
-
-        // Simulação do sistema de pesquisa da fazenda
-        document.getElementById('search-btn').addEventListener('click', function() {
-            var val = document.getElementById('search-box').value;
-            if(val === 'FZ-123') {
-                map.flyToBounds(fazenda.getBounds(), { padding: [50, 50], duration: 1.5 });
-                fazenda.openPopup();
-            } else {
-                alert("Para testes, tente buscar por 1003");
-            }
+        // 2. MAPAS BASE (BASEMAPS)
+        // Mapa de Satélite (Google)
+        var googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{
+            maxZoom: 20,
+            subdomains:['mt0','mt1','mt2','mt3'],
+            attribution: '© Google Satellite'
         });
+
+        // Mapa Claro/Clean (CartoDB Positron - excelente para destacar dados vetoriais)
+        var cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap contributors © CARTO',
+            maxZoom: 20
+        }).addTo(map); // Definido como padrão ao abrir
+
+        // 3. FUNÇÃO PARA CRIAR POP-UPS DINÂMICOS
+        // Essa função lê os atributos do seu GeoJSON do QGIS e monta uma tabela HTML
+        function onEachFeature(feature, layer) {
+            if (feature.properties) {
+                let popupContent = '<table class="popup-table">';
+                for (let key in feature.properties) {
+                    popupContent += `<tr><th>${key}</th><td>${feature.properties[key]}</td></tr>`;
+                }
+                popupContent += '</table>';
+                layer.bindPopup(popupContent);
+            }
+        }
+
+        // 4. ESTILOS DAS CAMADAS
+        var styleConservacao = { color: "#2E8B57", weight: 2, opacity: 1, fillColor: "#3CB371", fillOpacity: 0.5 };
+        var styleFazendas = { color: "#D2691E", weight: 2, opacity: 1, fillColor: "#CD853F", fillOpacity: 0.4 };
+        var styleInfluencia = { color: "#4169E1", weight: 3, opacity: 0.8, dashArray: '5, 10', fill: false };
+
+        // 5. CARREGAMENTO DOS DADOS GEOJSON VIA FETCH API
+        // Criando grupos de camadas vazios para adicionar ao controle
+        var conservacaoLayer = L.layerGroup();
+        var fazendasLayer = L.layerGroup();
+        var influenciaLayer = L.layerGroup();
+
+        // Carregar CONSERVACAO.geojson
+        fetch('dados/CONSERVACAO.geojson')
+            .then(res => res.json())
+            .then(data => {
+                var layer = L.geoJSON(data, { style: styleConservacao, onEachFeature: onEachFeature });
+                conservacaoLayer.addLayer(layer);
+                conservacaoLayer.addTo(map); // Adiciona ligado por padrão
+                map.fitBounds(layer.getBounds()); // Dá zoom automático para a área dos dados
+            })
+            .catch(err => console.error("Erro ao carregar Conservação:", err));
+
+        // Carregar fazendas.geojson
+        fetch('dados/fazendas.geojson')
+            .then(res => res.json())
+            .then(data => {
+                var layer = L.geoJSON(data, { style: styleFazendas, onEachFeature: onEachFeature });
+                fazendasLayer.addLayer(layer);
+                fazendasLayer.addTo(map); // Adiciona ligado por padrão
+            })
+            .catch(err => console.error("Erro ao carregar Fazendas:", err));
+
+        // Carregar influencia.geojson
+        fetch('dados/influencia.geojson')
+            .then(res => res.json())
+            .then(data => {
+                var layer = L.geoJSON(data, { style: styleInfluencia, onEachFeature: onEachFeature });
+                influenciaLayer.addLayer(layer);
+                influenciaLayer.addTo(map); // Adiciona ligado por padrão
+            })
+            .catch(err => console.error("Erro ao carregar Influência:", err));
+
+        // 6. CONTROLE DE CAMADAS (Ligar e Desligar)
+        var baseMaps = {
+            "Mapa Limpo (CartoDB)": cartoLight,
+            "Imagem de Satélite (Google)": googleSat
+        };
+
+        var overlayMaps = {
+            "<span style='color:#2E8B57; font-weight:bold;'>🟩 Áreas de Conservação</span>": conservacaoLayer,
+            "<span style='color:#D2691E; font-weight:bold;'>🟧 Fazendas</span>": fazendasLayer,
+            "<span style='color:#4169E1; font-weight:bold;'>🟦 Área de Influência</span>": influenciaLayer
+        };
+
+        // Adiciona o painel de controle no canto superior direito
+        L.control.layers(baseMaps, overlayMaps, {collapsed: false}).addTo(map);
+
     </script>
 </body>
 </html>
