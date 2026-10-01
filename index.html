@@ -23,17 +23,27 @@
             --border-color: rgba(255,255,255,0.1);
         }
 
+        /* Variáveis do Modo Claro */
+        body.light-mode {
+            --bg-dark: rgba(248, 250, 252, 0.95);
+            --bg-card: rgba(255, 255, 255, 0.95);
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --border-color: rgba(0,0,0,0.15);
+        }
+
         body, html { margin: 0; padding: 0; height: 100%; font-family: 'Inter', sans-serif; overflow: hidden; background-color: #000; }
         
         #map { width: 100%; height: 100vh; z-index: 1; }
 
         /* Controles do Leaflet */
         .leaflet-control-zoom { border: none !important; box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important; }
-        .leaflet-control-zoom a { background-color: var(--bg-card) !important; color: var(--text-main) !important; border-color: #333 !important; }
-        .leaflet-control-scale-line { background: rgba(30, 41, 35, 0.8) !important; color: #fff !important; border-color: rgba(255,255,255,0.5) !important; font-family: 'Inter', sans-serif; font-size: 11px; }
+        .leaflet-control-zoom a { background-color: var(--bg-card) !important; color: var(--text-main) !important; border-color: var(--border-color) !important; }
+        .leaflet-control-scale-line { background: var(--bg-card) !important; color: var(--text-main) !important; border-color: var(--border-color) !important; font-family: 'Inter', sans-serif; font-size: 11px; }
+        .leaflet-control-layers { background: var(--bg-card) !important; color: var(--text-main) !important; border: 1px solid var(--border-color) !important; border-radius: 8px; font-family: 'Inter', sans-serif; }
 
         .north-arrow {
-            position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; z-index: 1000;
+            position: absolute; top: 70px; right: 20px; width: 40px; height: 40px; z-index: 1000;
             background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 50%;
             display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
@@ -47,21 +57,39 @@
         }
         #coord-display span { color: var(--text-muted); }
 
+        /* Botão Mestre de Mostrar Sidebar */
+        .menu-open-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 990;
+            background: var(--bg-dark); color: var(--text-main); font-size: 1.5rem;
+            border: 1px solid var(--border-color); border-radius: 8px;
+            width: 45px; height: 45px; display: flex; justify-content: center; align-items: center;
+            cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); backdrop-filter: blur(12px);
+        }
+        .menu-open-btn:hover { color: var(--primary); }
+
         /* MENU LATERAL */
         #sidebar {
             position: absolute; top: 20px; left: 20px; width: 340px; max-height: calc(100vh - 40px);
             background: var(--bg-dark); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(74, 222, 128, 0.2); border-radius: 12px; z-index: 1000;
             display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            color: var(--text-main); overflow-y: auto;
+            color: var(--text-main); overflow-y: auto; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
         }
+        #sidebar.hidden { transform: translateX(-120%); opacity: 0; pointer-events: none; }
 
         #sidebar::-webkit-scrollbar { width: 6px; }
         #sidebar::-webkit-scrollbar-track { background: transparent; }
-        #sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+        #sidebar::-webkit-scrollbar-thumb { background: rgba(150,150,150,0.3); border-radius: 4px; }
 
-        .sidebar-header { padding: 15px; border-bottom: 1px solid var(--border-color); text-align: center; }
-        .sidebar-header h1 { margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--primary); }
+        /* Cabeçalho com Logo e Controles Tema/Fechar */
+        .sidebar-header { padding: 25px 15px 15px; border-bottom: 1px solid var(--border-color); text-align: center; position: relative; }
+        .theme-btn, .close-btn { position: absolute; top: 12px; background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.1rem; transition: color 0.2s; }
+        .theme-btn { left: 15px; }
+        .close-btn { right: 15px; }
+        .theme-btn:hover, .close-btn:hover { color: var(--text-main); }
+        
+        .sidebar-logo { max-width: 140px; height: auto; display: block; margin: 0 auto 10px auto; }
+        .sidebar-header h1 { margin: 0; font-size: 1.1rem; font-weight: 700; color: var(--primary); }
 
         .section { padding: 15px; border-bottom: 1px solid var(--border-color); }
         .section-title { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px; }
@@ -69,8 +97,9 @@
         .search-row { display: flex; gap: 8px; margin-bottom: 10px; }
         .search-input {
             flex: 1; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color);
-            background: rgba(0,0,0,0.3); color: #fff; font-family: 'Inter', sans-serif; font-size: 0.85rem;
+            background: rgba(0,0,0,0.2); color: var(--text-main); font-family: 'Inter', sans-serif; font-size: 0.85rem;
         }
+        body.light-mode .search-input { background: #fff; }
         .search-input::placeholder { color: #64748b; }
         .search-btn {
             background: var(--primary); color: #000; border: none; padding: 0 15px; border-radius: 6px;
@@ -78,35 +107,33 @@
         }
         .search-btn:hover { background: var(--primary-hover); }
 
-        /* Lista Expansível */
+        /* Lista Expansível Principal */
         .accordion-btn {
-            background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; padding: 12px; width: 100%;
+            background: rgba(150,150,150,0.1); color: var(--text-main); cursor: pointer; padding: 12px; width: 100%;
             text-align: left; border: 1px solid var(--border-color); border-radius: 6px; outline: none;
             transition: 0.3s; font-weight: 600; font-size: 0.85rem; display: flex; justify-content: space-between;
         }
-        .accordion-btn:hover { background: rgba(255,255,255,0.1); }
+        .accordion-btn:hover { background: rgba(150,150,150,0.2); }
         .accordion-content {
-            padding: 15px 10px; display: none; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color);
+            padding: 15px 10px; display: none; background: rgba(0,0,0,0.1); border: 1px solid var(--border-color);
             border-top: none; border-radius: 0 0 6px 6px; max-height: 250px; overflow-y: auto;
         }
+        body.light-mode .accordion-content { background: #f8fafc; }
         .accordion-content::-webkit-scrollbar { width: 4px; }
-        .accordion-content::-webkit-scrollbar-thumb { background: #555; }
+        .accordion-content::-webkit-scrollbar-thumb { background: var(--text-muted); }
 
-        .mass-action-row { display: flex; gap: 5px; margin-bottom: 15px; }
-        .mass-btn {
-            flex: 1; padding: 6px; background: #334155; color: #fff; border: 1px solid var(--border-color);
-            border-radius: 4px; cursor: pointer; font-size: 0.75rem; transition: 0.2s;
-        }
-        .mass-btn:hover { background: #475569; }
-
-        /* Categorias e Checkboxes */
+        /* Categorias e Checkboxes (Com ícone expansível) */
         .category-header { 
             font-size: 0.8rem; font-weight: 700; text-transform: uppercase; 
             padding-bottom: 4px; margin-bottom: 10px; border-bottom: 1px solid var(--border-color);
-            display: flex; align-items: center; gap: 8px;
+            display: flex; align-items: center; justify-content: space-between;
         }
+        .category-header-group { display: flex; align-items: center; gap: 8px; flex: 1; }
         .category-header input[type="checkbox"] { cursor: pointer; width: 14px; height: 14px; }
-        .category-header label { cursor: pointer; user-select: none; flex: 1; }
+        .category-header label { cursor: pointer; user-select: none; }
+        
+        .sub-accordion-btn { cursor: pointer; padding: 0 5px; font-size: 0.7rem; color: var(--text-muted); transition: 0.2s; }
+        .sub-accordion-btn:hover { color: var(--text-main); }
         
         .farm-list-wrapper { padding-left: 22px; margin-bottom: 15px; }
         .farm-list-item { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 0.85rem; }
@@ -122,14 +149,15 @@
 
         /* Análises */
         .insight-card {
-            background: rgba(0,0,0,0.3); border-radius: 6px; padding: 10px;
+            background: rgba(150,150,150,0.1); border-radius: 6px; padding: 10px;
             border-left: 3px solid; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;
         }
         .insight-title-group { display: flex; flex-direction: column; }
         .insight-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
         .insight-qtd { font-size: 1.25rem; font-weight: 700; line-height: 1.2; }
+        .insight-qtd-total { color: var(--text-main); }
         .insight-data-group { text-align: right; display: flex; flex-direction: column; }
-        .insight-area { font-size: 0.85rem; color: #fff; font-weight: 500; }
+        .insight-area { font-size: 0.85rem; color: var(--text-main); font-weight: 500; }
         .insight-perc { font-size: 0.7rem; color: var(--text-muted); }
 
         /* Switches Globais */
@@ -137,23 +165,26 @@
         .layer-info { display: flex; align-items: center; gap: 8px; }
         .switch { position: relative; display: inline-block; width: 36px; height: 20px; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.2); transition: .4s; border-radius: 34px; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(150,150,150,0.3); transition: .4s; border-radius: 34px; }
         .slider:before { position: absolute; content: ""; height: 12px; width: 12px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: var(--primary); }
         input:checked + .slider:before { transform: translateX(16px); }
 
-        /* POPUP */
+        /* POPUP Leaflet Adaptável */
         .leaflet-popup-content-wrapper { background: var(--bg-card) !important; color: var(--text-main) !important; border: 1px solid var(--border-color); border-radius: 8px; }
         .leaflet-popup-tip { background: var(--bg-card) !important; }
         .leaflet-popup-close-button { color: var(--text-muted) !important; }
         .popup-table { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif;}
-        .popup-table th, .popup-table td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 12px; }
+        .popup-table th, .popup-table td { padding: 8px; border-bottom: 1px solid var(--border-color); font-size: 12px; }
         .popup-table th { color: var(--text-muted); text-align: left; width: 40%;}
     </style>
 </head>
 <body>
 
     <div id="map"></div>
+    
+    <!-- Botão Flutuante para Mostrar o Sidebar -->
+    <button class="menu-open-btn" onclick="toggleSidebar()" title="Mostrar Menu">☰</button>
 
     <div class="north-arrow" title="Norte Verdadeiro">
         <svg viewBox="0 0 24 24"><path d="M12 2L8 22L12 17L16 22L12 2Z"/></svg>
@@ -163,6 +194,9 @@
 
     <div id="sidebar">
         <div class="sidebar-header">
+            <button class="theme-btn" onclick="toggleTheme()" title="Modo Claro / Escuro">☀️</button>
+            <button class="close-btn" onclick="toggleSidebar()" title="Ocultar Menu">✖</button>
+            <img src="LOGO.png" alt="Logo UFA" class="sidebar-logo">
             <h1>🌐 GEOPORTAL</h1>
         </div>
 
@@ -195,30 +229,35 @@
 
             <button class="accordion-btn" onclick="toggleAccordion()">LISTA DE FAZENDAS <span>▼</span></button>
             <div class="accordion-content" id="accordion-fazendas">
-                <div class="mass-action-row">
-                    <button class="mass-btn" onclick="marcarTodasLista(true)">Marcar Todos</button>
-                    <button class="mass-btn" onclick="marcarTodasLista(false)">Desmarcar</button>
-                </div>
                 
                 <!-- Bloco Elegíveis -->
                 <div class="category-header" style="color: var(--elegivel);">
-                    <input type="checkbox" id="chk-master-elegivel" class="chk-elegivel" checked onchange="toggleCategoria('ELEGÍVEL', this.checked)">
-                    <label for="chk-master-elegivel">ELEGÍVEIS</label>
+                    <div class="category-header-group">
+                        <input type="checkbox" id="chk-master-elegivel" class="chk-elegivel" checked onchange="toggleCategoria('ELEGÍVEL', this.checked)">
+                        <label for="chk-master-elegivel">ELEGÍVEIS</label>
+                    </div>
+                    <span class="sub-accordion-btn" onclick="toggleSubList('list-elegiveis', this)">▼</span>
                 </div>
                 <div class="farm-list-wrapper" id="list-elegiveis"></div>
                 
                 <!-- Bloco Inelegíveis -->
                 <div class="category-header" style="color: var(--inelegivel);">
-                    <input type="checkbox" id="chk-master-inelegivel" class="chk-inelegivel" checked onchange="toggleCategoria('INELEGÍVEL', this.checked)">
-                    <label for="chk-master-inelegivel">INELEGÍVEIS</label>
+                    <div class="category-header-group">
+                        <input type="checkbox" id="chk-master-inelegivel" class="chk-inelegivel" checked onchange="toggleCategoria('INELEGÍVEL', this.checked)">
+                        <label for="chk-master-inelegivel">INELEGÍVEIS</label>
+                    </div>
+                    <span class="sub-accordion-btn" onclick="toggleSubList('list-inelegiveis', this)">▼</span>
                 </div>
                 <div class="farm-list-wrapper" id="list-inelegiveis"></div>
                 
-                <!-- Bloco Indefinido (Oculto por Padrão) -->
+                <!-- Bloco Indefinido (Oculto) -->
                 <div id="wrapper-outros" style="display: none;">
                     <div class="category-header" style="color: var(--text-muted);">
-                        <input type="checkbox" id="chk-master-outros" checked onchange="toggleCategoria('OUTRO', this.checked)">
-                        <label for="chk-master-outros">INDEFINIDO</label>
+                        <div class="category-header-group">
+                            <input type="checkbox" id="chk-master-outros" checked onchange="toggleCategoria('OUTRO', this.checked)">
+                            <label for="chk-master-outros">INDEFINIDO</label>
+                        </div>
+                        <span class="sub-accordion-btn" onclick="toggleSubList('list-outros', this)">▼</span>
                     </div>
                     <div class="farm-list-wrapper" id="list-outros"></div>
                 </div>
@@ -254,7 +293,7 @@
             <div class="insight-card" style="border-left-color: var(--text-muted);">
                 <div class="insight-title-group">
                     <span class="insight-label">Total Visível</span>
-                    <span class="insight-qtd" id="ins-total-qtd" style="color: #fff;">0</span>
+                    <span class="insight-qtd insight-qtd-total" id="ins-total-qtd">0</span>
                 </div>
                 <div class="insight-data-group">
                     <span class="insight-area" id="ins-total-area">0.00 ha</span>
@@ -289,19 +328,43 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
+        // 1. Definição de Mapas Base (Basemaps)
+        var esriImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri' });
+        var osmMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' });
+
         var map = L.map('map', { 
-            zoomControl: false, zoomSnap: 0.25, zoomDelta: 0.5, wheelPxPerZoomLevel: 100
+            zoomControl: false, zoomSnap: 0.25, zoomDelta: 0.5, wheelPxPerZoomLevel: 100,
+            layers: [esriImagery] // Camada inicial
         }).setView([-10.0, -55.0], 5);
         
         L.control.zoom({ position: 'bottomright' }).addTo(map);
         L.control.scale({ metric: true, imperial: false, position: 'bottomleft' }).addTo(map);
 
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri' }).addTo(map);
+        // Seletor de Camadas (Canto superior direito)
+        var baseMaps = {
+            "Satélite (Atual)": esriImagery,
+            "OpenStreetMap": osmMap
+        };
+        L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
+
+        // Funções de UI Adicionais (Tema e Menu Lateral)
+        window.toggleSidebar = function() {
+            var sidebar = document.getElementById("sidebar");
+            sidebar.classList.toggle("hidden");
+        };
+
+        window.toggleTheme = function() {
+            document.body.classList.toggle('light-mode');
+            const btn = document.querySelector('.theme-btn');
+            if (document.body.classList.contains('light-mode')) {
+                btn.innerText = '🌙';
+            } else {
+                btn.innerText = '☀️';
+            }
+        };
 
         var coordDisplay = document.getElementById('coord-display');
-        map.on('mousemove', function(e) {
-            coordDisplay.innerHTML = `<span>Lat:</span> ${e.latlng.lat.toFixed(5)} <span>| Long:</span> ${e.latlng.lng.toFixed(5)}`;
-        });
+        map.on('mousemove', function(e) { coordDisplay.innerHTML = `<span>Lat:</span> ${e.latlng.lat.toFixed(5)} <span>| Long:</span> ${e.latlng.lng.toFixed(5)}`; });
 
         var layerInfluencia, layerConservacao;
         var grupoFazendas = L.featureGroup().addTo(map);
@@ -329,22 +392,17 @@
             }
         }
 
-        // Duplo Clique (Zoom Global em Camada Inteira)
         window.zoomToGrupo = function(grupo) {
             if (grupo && grupo.getBounds && Object.keys(grupo._layers).length > 0) {
                 map.flyToBounds(grupo.getBounds(), { duration: 1.5, padding: [50, 50] });
-            } else {
-                alert("Camada ainda está carregando ou está vazia.");
-            }
+            } else alert("Camada ainda está carregando ou está vazia.");
         };
 
-        // Duplo Clique (Zoom numa Fazenda Específica)
         window.zoomToFazenda = function(idFazenda) {
             let layer = dicionarioFazendas[idFazenda];
             if (layer) {
                 document.getElementById(`chk-${idFazenda}`).checked = true;
                 toggleFazendaIndividual(idFazenda, true);
-
                 let bounds = layer.getBounds();
                 map.flyToBounds(bounds, { duration: 1.5, padding: [50, 50] });
                 setTimeout(() => { layer.eachLayer(function(l) { l.openPopup(); }); }, 1500);
@@ -358,8 +416,7 @@
             for (let id in metadadosFazendas) {
                 let faz = metadadosFazendas[id];
                 if (faz.visivel) {
-                    countTotal++;
-                    areaTotal += faz.area;
+                    countTotal++; areaTotal += faz.area;
                     if (faz.status === 'ELEGÍVEL') { countElegivel++; areaElegivel += faz.area; }
                     else if (faz.status === 'INELEGÍVEL') { countInelegivel++; areaInelegivel += faz.area; }
                 }
@@ -380,9 +437,7 @@
             document.getElementById('ins-inel-perc').innerText = percInelegivel + '% da área';
         }
 
-        fetch('dados/fazendas.geojson')
-            .then(res => res.json())
-            .then(data => {
+        fetch('dados/fazendas.geojson').then(res => res.json()).then(data => {
                 let contElegiveis = document.getElementById('list-elegiveis');
                 let contInelegiveis = document.getElementById('list-inelegiveis');
                 let contOutros = document.getElementById('list-outros');
@@ -391,11 +446,9 @@
                     let idFazenda = feature.properties.NOME || feature.properties.CODIGO || feature.properties.nome || `Fazenda ${index + 1}`;
                     let layer = L.geoJSON(feature, { style: styleFazendas, onEachFeature: createPopup });
                     
-                    dicionarioFazendas[idFazenda] = layer;
-                    grupoFazendas.addLayer(layer);
+                    dicionarioFazendas[idFazenda] = layer; grupoFazendas.addLayer(layer);
 
                     let pArea = feature.properties.AREA_KM2 || feature.properties.AREA || feature.properties.area_km2 || 0;
-                    
                     let status = feature.properties && feature.properties.ELEGIBILIDADE ? String(feature.properties.ELEGIBILIDADE).trim().toUpperCase() : 'OUTRO';
                     let flagStatus = (status === 'ELEGÍVEL' || status === 'ELEGIVEL') ? 'ELEGÍVEL' : (status === 'INELEGÍVEL' || status === 'INELEGIVEL' ? 'INELEGÍVEL' : 'OUTRO');
 
@@ -405,39 +458,44 @@
                     let checkboxHTML = `
                         <div class="farm-list-item">
                             <input type="checkbox" id="chk-${idFazenda}" class="${chkClass}" checked onchange="toggleFazendaIndividual('${idFazenda}', this.checked)">
-                            <label class="farm-label" for="chk-${idFazenda}" ondblclick="zoomToFazenda('${idFazenda}')" title="Duplo clique para focar na fazenda">${idFazenda}</label>
+                            <label class="farm-label" for="chk-${idFazenda}" ondblclick="zoomToFazenda('${idFazenda}')">${idFazenda}</label>
                         </div>
                     `;
 
                     if (flagStatus === 'ELEGÍVEL') contElegiveis.insertAdjacentHTML('beforeend', checkboxHTML);
                     else if (flagStatus === 'INELEGÍVEL') contInelegiveis.insertAdjacentHTML('beforeend', checkboxHTML);
-                    else {
-                        document.getElementById('wrapper-outros').style.display = 'block';
-                        contOutros.insertAdjacentHTML('beforeend', checkboxHTML);
-                    }
+                    else { document.getElementById('wrapper-outros').style.display = 'block'; contOutros.insertAdjacentHTML('beforeend', checkboxHTML); }
                 });
                 
-                let bounds = grupoFazendas.getBounds();
-                map.fitBounds(bounds);
-                
-                // Configuração Limite Visual (Máximo 200km do arquivo)
-                // Usando aprox 1.8 a 2 graus para simular os 200km além do limite original
+                let bounds = grupoFazendas.getBounds(); map.fitBounds(bounds);
                 let limitBuffer = 2.0; 
-                let maxBounds = L.latLngBounds(
-                    L.latLng(bounds.getSouth() - limitBuffer, bounds.getWest() - limitBuffer),
-                    L.latLng(bounds.getNorth() + limitBuffer, bounds.getEast() + limitBuffer)
-                );
+                let maxBounds = L.latLngBounds(L.latLng(bounds.getSouth() - limitBuffer, bounds.getWest() - limitBuffer), L.latLng(bounds.getNorth() + limitBuffer, bounds.getEast() + limitBuffer));
                 
                 map.setMaxBounds(maxBounds);
-                map.options.minZoom = map.getBoundsZoom(maxBounds); // Trava o zoom mínimo
-
+                map.options.minZoom = map.getBoundsZoom(maxBounds);
                 atualizarInsights();
             });
 
         fetch('dados/influencia.geojson').then(res => res.json()).then(data => { layerInfluencia = L.geoJSON(data, { style: styleInfluencia, onEachFeature: createPopup }).addTo(map); });
         fetch('dados/CONSERVACAO.geojson').then(res => res.json()).then(data => { layerConservacao = L.geoJSON(data, { style: styleConservacao, onEachFeature: createPopup }).addTo(map); });
 
-        // Lógica: Checkbox em Lote por Categoria (Elegíveis/Inelegíveis)
+        // Lógicas de Accordion
+        window.toggleAccordion = function() {
+            let content = document.getElementById("accordion-fazendas");
+            content.style.display = content.style.display === "block" ? "none" : "block";
+        };
+
+        window.toggleSubList = function(listId, iconEl) {
+            let listWrapper = document.getElementById(listId);
+            if(listWrapper.style.display === "none") {
+                listWrapper.style.display = "block";
+                iconEl.innerText = "▼";
+            } else {
+                listWrapper.style.display = "none";
+                iconEl.innerText = "▶";
+            }
+        };
+
         window.toggleCategoria = function(status, isChecked) {
             for (let idFazenda in metadadosFazendas) {
                 if (metadadosFazendas[idFazenda].status === status) {
@@ -453,42 +511,28 @@
         window.toggleFazendaIndividual = function(idFazenda, isChecked) {
             let layer = dicionarioFazendas[idFazenda];
             if (isChecked) grupoFazendas.addLayer(layer); else grupoFazendas.removeLayer(layer);
-            
             if (metadadosFazendas[idFazenda]) metadadosFazendas[idFazenda].visivel = isChecked;
             atualizarInsights();
         };
 
-        window.marcarTodasLista = function(marcar) {
+        window.toggleMasterFazendas = function(isChecked) {
             for (let idFazenda in dicionarioFazendas) {
                 let checkbox = document.getElementById(`chk-${idFazenda}`);
-                if (checkbox) checkbox.checked = marcar;
-                
+                if (checkbox) checkbox.checked = isChecked;
                 let layer = dicionarioFazendas[idFazenda];
-                if (marcar) grupoFazendas.addLayer(layer); else grupoFazendas.removeLayer(layer);
-                
-                if (metadadosFazendas[idFazenda]) metadadosFazendas[idFazenda].visivel = marcar;
+                if (isChecked) grupoFazendas.addLayer(layer); else grupoFazendas.removeLayer(layer);
+                if (metadadosFazendas[idFazenda]) metadadosFazendas[idFazenda].visivel = isChecked;
             }
-            document.getElementById('toggle-todas-fazendas').checked = marcar;
-            document.getElementById('chk-master-elegivel').checked = marcar;
-            document.getElementById('chk-master-inelegivel').checked = marcar;
-            if(document.getElementById('chk-master-outros')) document.getElementById('chk-master-outros').checked = marcar;
-            
+            document.getElementById('toggle-todas-fazendas').checked = isChecked;
+            document.getElementById('chk-master-elegivel').checked = isChecked;
+            document.getElementById('chk-master-inelegivel').checked = isChecked;
+            if(document.getElementById('chk-master-outros')) document.getElementById('chk-master-outros').checked = isChecked;
             atualizarInsights();
-        };
-
-        window.toggleMasterFazendas = function(isChecked) {
-            marcarTodasLista(isChecked);
-        };
-
-        window.toggleAccordion = function() {
-            let content = document.getElementById("accordion-fazendas");
-            content.style.display = content.style.display === "block" ? "none" : "block";
         };
 
         window.buscarFazenda = function() {
             let termo = document.getElementById('input-busca-fazenda').value.toLowerCase().trim();
             if(!termo) return;
-
             for (let idFazenda in dicionarioFazendas) {
                 if (idFazenda.toLowerCase().includes(termo)) {
                     zoomToFazenda(idFazenda);
