@@ -475,7 +475,19 @@
             });
 
         fetch('dados/influencia.geojson').then(res => res.json()).then(data => { layerInfluencia = L.geoJSON(data, { style: styleInfluencia, onEachFeature: createPopup }).addTo(map); });
-        fetch('dados/CONSERVACAO.geojson').then(res => res.json()).then(data => { layerConservacao = L.geoJSON(data, { style: styleConservacao, onEachFeature: createPopup }).addTo(map); });
+        
+        /* LINHA MODIFICADA: Adicionado a URL WMS ao popup da camada de conservação sem alterar a estrutura do script original. */
+        fetch('dados/CONSERVACAO.geojson').then(res => res.json()).then(data => { layerConservacao = L.geoJSON(data, { style: styleConservacao, onEachFeature: function(feature, layer) {
+            if (feature.properties) {
+                let popupContent = '<table class="popup-table">';
+                for (let key in feature.properties) {
+                    popupContent += `<tr><th>${key}</th><td>${feature.properties[key]}</td></tr>`;
+                }
+                popupContent += '</table>';
+                popupContent += '<div style="margin-top: 12px; text-align: center;"><a href="https://geoservicos.inde.gov.br/geoserver/ICMBio/ows?service=WMS&version=1.1.0&request=GetMap&layers=limiteucsfederais_a&styles=&bbox=-73.99121093750001,-34.01160434154568,-25.290946960449205,5.271910667501984&width=320&height=245&tiled=true&srs=EPSG:4326&format=image/png&transparent=true" target="_blank" style="background-color: var(--primary); color: #000; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; display: inline-block; transition: 0.2s;">Consultar Dados WMS</a></div>';
+                layer.bindPopup(popupContent);
+            }
+        } }).addTo(map); });
 
         window.toggleAccordion = function() {
             let content = document.getElementById("accordion-fazendas");
